@@ -1,0 +1,8 @@
+---
+env:
+  mocha: true
+globals:
+  assert: true
+  expect: true
+extends:
+  - "./.eslintrc-es2015.yaml"

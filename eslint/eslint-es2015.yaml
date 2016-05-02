@@ -1,0 +1,45 @@
+---
+env:
+  es6: true
+
+parserOptions:
+  ecmaVersion: 6
+  sourceType: "module"
+  ecmaFeatures:
+    experimentalObjectRestSpread: true
+
+rules:
+  # General but applicable here
+
+  no-inner-declarations: 0
+  no-iterator: 0
+
+  # ECMAScript 6
+
+  arrow-parens:
+    - 2
+    - as-needed
+  arrow-spacing:
+    - 2
+    - before: true
+      after: true
+  constructor-super: 2
+  generator-star-spacing:
+    - 2
+    - before
+  no-class-assign: 2
+  no-const-assign: 2
+  no-this-before-super: 2
+  no-var: 2
+  object-shorthand:
+    - 2
+    - always
+  prefer-const: 2
+  prefer-spread: 2
+  prefer-reflect: 0
+  quotes:
+    - 2
+    - single
+    - avoidEscape: true
+      allowTemplateLiterals: true
+  require-yield: 2

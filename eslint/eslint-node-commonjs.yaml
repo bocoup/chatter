@@ -1,0 +1,29 @@
+---
+env:
+  node: true
+
+ecmaFeatures:
+  blockBindings: true
+
+rules:
+
+  # General but applicable here
+
+  strict:
+    - 2
+    - global
+
+  # Node.js and CommonJS
+
+  callback-return:
+    - 2
+    - [ callback, cb, done, next ]
+  handle-callback-err:
+    - 2
+    - "^err(?:or)?$"
+  no-mixed-requires: 0
+  no-new-require: 2
+  no-path-concat: 2
+  no-process-exit: 2
+  no-restricted-modules: 0
+  no-sync: 0
