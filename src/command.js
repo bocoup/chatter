@@ -1,11 +1,11 @@
 import {parseArgs} from './args-parser';
 
-// Pass a message through any number of commands. The first command to return
-// a non-false value is the winner!
-export function runCommands(commands, message) {
+// Pass a message and any other arbitrary args through any number of commands.
+// The first command to return a non-false value is the winner!
+export function runCommands(commands, message, ...args) {
   const {length} = commands;
   for (let i = 0; i < length; i++) {
-    const result = commands[i].process(message);
+    const result = commands[i].handleMessage(message, ...args);
     if (result !== false) {
       return result;
     }
@@ -14,7 +14,7 @@ export function runCommands(commands, message) {
 }
 
 export class Command {
-  constructor({name, description, commands, onMatch, parseOptions}) {
+  constructor({name, description, commands, onMatch, parseOptions} = {}) {
     this.name = name;
     this.description = description;
     this.commands = commands || [];
@@ -27,30 +27,30 @@ export class Command {
     return this.description;
   }
 
-  runCommands(message) {
+  runCommands(message, ...args) {
     const commands = [...this.commands];
     if (this.onMatch) {
-      commands.push({process: this.onMatchWrapper});
+      commands.push({handleMessage: this.onMatchWrapper});
     }
-    return runCommands(commands, message);
+    return runCommands(commands, message, ...args);
   }
 
-  onMatchWrapper(message) {
+  onMatchWrapper(message, ...args) {
     if (!this.onMatch) {
       return false;
     }
-    const args = parseArgs(message, this.parseOptions);
-    args.input = message;
-    return this.onMatch(args);
+    const parsed = parseArgs(message, this.parseOptions);
+    parsed.input = message;
+    return this.onMatch(parsed, ...args);
   }
 
-  process(message) {
+  handleMessage(message, ...args) {
     const isMatch = message.indexOf(this.name) === 0;
     if (!isMatch) {
       return false;
     }
     const remainder = message.slice(this.name.length).replace(/^\s+/, '');
-    return this.runCommands(remainder);
+    return this.runCommands(remainder, ...args);
   }
 }
 
