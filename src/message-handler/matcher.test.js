@@ -57,6 +57,31 @@ describe('MatchingMessageHandler', function() {
       return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
     });
 
+    it('should support function child handlers', function() {
+      const children = [
+        () => false,
+        (remainder, a, b) => ({response: `${remainder} ${a} ${b}`}),
+      ];
+      const matcher = createMatcher({match: 'foo', children});
+      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
+    });
+
+    it('should support a single child handler (object) instead of array', function() {
+      const child = {
+        handleMessage(remainder, a, b) {
+          return {response: `${remainder} ${a} ${b}`};
+        },
+      };
+      const matcher = createMatcher({match: 'foo', children: child});
+      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
+    });
+
+    it('should support a single child handler (function) instead of array', function() {
+      const child = (remainder, a, b) => ({response: `${remainder} ${a} ${b}`});
+      const matcher = createMatcher({match: 'foo', children: child});
+      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
+    });
+
   });
 
 });

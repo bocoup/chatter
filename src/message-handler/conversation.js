@@ -1,5 +1,6 @@
 import Promise from 'bluebird';
 import {DelegatingMessageHandler} from './delegate';
+import {handleMessage} from '../util/message-handler';
 
 export class ConversingMessageHandler extends DelegatingMessageHandler {
 
@@ -17,7 +18,7 @@ export class ConversingMessageHandler extends DelegatingMessageHandler {
     const dialog = this.dialog;
     if (dialog) {
       this.clearDialog();
-      promise = Promise.try(() => dialog.handleMessage(message, ...args));
+      promise = Promise.try(() => handleMessage(dialog, message, ...args));
     }
     else {
       promise = super.handleMessage(message, ...args);

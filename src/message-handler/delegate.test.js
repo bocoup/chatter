@@ -50,6 +50,31 @@ describe('DelegatingMessageHandler', function() {
       ]);
     });
 
+    it('should support function child handlers', function() {
+      const children = [
+        () => false,
+        (response, a, b) => ({response: `${response} ${a} ${b}`}),
+      ];
+      const delegate = createDelegate({children});
+      return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
+    });
+
+    it('should support a single child handler (object) instead of array', function() {
+      const child = {
+        handleMessage(response, a, b) {
+          return {response: `${response} ${a} ${b}`};
+        },
+      };
+      const delegate = createDelegate({children: child});
+      return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
+    });
+
+    it('should support a single child handler (function) instead of array', function() {
+      const child = (response, a, b) => ({response: `${response} ${a} ${b}`});
+      const delegate = createDelegate({children: child});
+      return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
+    });
+
     it('should pass additional arguments into child handlers', function() {
       const children = [
         {

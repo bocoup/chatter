@@ -1,10 +1,11 @@
 import Promise from 'bluebird';
+import {handleMessage} from '../util/message-handler';
 
 export class DelegatingMessageHandler {
 
   constructor(options = {}) {
     const children = options.children || [];
-    this.children = [...children];
+    this.children = children;
   }
 
   // Iterate over all child handlers, returning a promise.
@@ -17,7 +18,10 @@ export class DelegatingMessageHandler {
   // yields the first non-false value a child handler returns. Otherwise,
   // return a promise that yields false.
   delegateToChildren(message, ...args) {
-    const {children} = this;
+    let {children} = this;
+    if (!Array.isArray(children)) {
+      children = [children];
+    }
     const {length} = children;
     let i = 0;
     const next = f => Promise.try(f).then(result => {
@@ -27,7 +31,7 @@ export class DelegatingMessageHandler {
       else if (i === length) {
         return false;
       }
-      return next(() => children[i++].handleMessage(message, ...args));
+      return next(() => handleMessage(children[i++], message, ...args));
     });
     return next(() => false);
   }

@@ -1,5 +1,6 @@
 import Promise from 'bluebird';
 import {parseArgs} from '../util/args-parser';
+import {handleMessage} from '../util/message-handler';
 
 export class ParsingMessageHandler {
 
@@ -7,7 +8,7 @@ export class ParsingMessageHandler {
     if (!('handleMessage' in options)) {
       throw new TypeError('Missing required "handleMessage" option.');
     }
-    this._handleMessage = options.handleMessage;
+    this.proxyHandler = options.handleMessage;
     this.parseOptions = options.parseOptions || {};
   }
 
@@ -16,7 +17,7 @@ export class ParsingMessageHandler {
   handleMessage(message = '', ...args) {
     const parsed = parseArgs(message, this.parseOptions);
     parsed.input = message;
-    return Promise.try(() => this._handleMessage(parsed, ...args));
+    return Promise.try(() => handleMessage(this.proxyHandler, parsed, ...args));
   }
 
 }
