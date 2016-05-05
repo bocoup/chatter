@@ -1,6 +1,7 @@
 import {parseArgs} from './args-parser';
 
-describe('args', function() {
+describe('args-parser', function() {
+
   describe('parseArgs', function() {
 
     it('should use an input array as-is', function() {
@@ -155,4 +156,5 @@ describe('args', function() {
         });
     });
   });
+
 });
