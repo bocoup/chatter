@@ -1,6 +1,6 @@
 import Promise from 'bluebird';
 
-export class MessageHandlerDelegate {
+export class DelegatingMessageHandler {
 
   constructor(options = {}) {
     const children = options.children || [];
@@ -35,5 +35,5 @@ export class MessageHandlerDelegate {
 }
 
 export default function createDelegate(options) {
-  return new MessageHandlerDelegate(options);
+  return new DelegatingMessageHandler(options);
 }

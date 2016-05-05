@@ -1,13 +1,13 @@
 import Promise from 'bluebird';
-import createDelegate, {MessageHandlerDelegate} from './delegate';
+import createDelegate, {DelegatingMessageHandler} from './delegate';
 
-describe('MessageHandlerDelegate', function() {
+describe('DelegatingMessageHandler', function() {
 
   describe('API', function() {
 
-    it('createDelegate should return an instance of MessageHandlerDelegate', function() {
+    it('createDelegate should return an instance of DelegatingMessageHandler', function() {
       const delegate = createDelegate();
-      return expect(delegate).to.be.an.instanceof(MessageHandlerDelegate);
+      expect(delegate).to.be.an.instanceof(DelegatingMessageHandler);
     });
 
   });
@@ -53,13 +53,13 @@ describe('MessageHandlerDelegate', function() {
     it('should pass additional arguments into child handlers', function() {
       const children = [
         {
-          handleMessage(message, a, b) {
-            return {message: `${message} ${a} ${b}`};
+          handleMessage(response, a, b) {
+            return {response: `${response} ${a} ${b}`};
           },
         },
       ];
       const delegate = createDelegate({children});
-      return expect(delegate.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'});
+      return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
     });
 
     it('should reject if an exception is thrown in a child handler', function() {
@@ -84,22 +84,22 @@ describe('MessageHandlerDelegate', function() {
           },
         },
         {
-          handleMessage(message) {
+          handleMessage(response) {
             i++;
-            return {message: `a ${message}`};
+            return {response: `a ${response}`};
           },
         },
         {
-          handleMessage(message) {
+          handleMessage(response) {
             i++;
-            return {message: `b ${message}`};
+            return {response: `b ${response}`};
           },
         },
       ];
       const delegate = createDelegate({children});
       const promise = delegate.handleMessage('foo');
       return Promise.all([
-        expect(promise).to.become({message: 'a foo'}),
+        expect(promise).to.become({response: 'a foo'}),
         promise.then(() => {
           expect(i).to.equal(2);
         }),
@@ -118,18 +118,18 @@ describe('MessageHandlerDelegate', function() {
           },
         },
         {
-          handleMessage(message) {
+          handleMessage(response) {
             i++;
             return new Promise(resolve => {
-              setTimeout(() => resolve({message: `a ${message}`}), 10);
+              setTimeout(() => resolve({response: `a ${response}`}), 10);
             });
           },
         },
         {
-          handleMessage(message) {
+          handleMessage(response) {
             i++;
             return new Promise(resolve => {
-              setTimeout(() => resolve({message: `b ${message}`}), 10);
+              setTimeout(() => resolve({response: `b ${response}`}), 10);
             });
           },
         },
@@ -137,7 +137,7 @@ describe('MessageHandlerDelegate', function() {
       const delegate = createDelegate({children});
       const promise = delegate.handleMessage('foo');
       return Promise.all([
-        expect(promise).to.become({message: 'a foo'}),
+        expect(promise).to.become({response: 'a foo'}),
         promise.then(() => {
           expect(i).to.equal(2);
         }),
