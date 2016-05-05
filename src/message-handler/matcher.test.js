@@ -16,15 +16,15 @@ describe('MatchingMessageHandler', function() {
 
   describe('handleMessage', function() {
 
-    it('should return a promise that gets fulfilled', function() {
-      const matcher = createMatcher({match: 'foo'});
-      return expect(matcher.handleMessage()).to.be.fulfilled();
-    });
-
     it('should throw if no match option was specified', function() {
       expect(() => createMatcher()).to.throw(/missing.*match/i);
       expect(() => createMatcher({})).to.throw(/missing.*match/i);
       expect(() => createMatcher({match: 'foo'})).to.not.throw();
+    });
+
+    it('should return a promise that gets fulfilled', function() {
+      const matcher = createMatcher({match: 'foo'});
+      return expect(matcher.handleMessage()).to.be.fulfilled();
     });
 
     it('should only run child handlers on match / should return false on no match', function() {
