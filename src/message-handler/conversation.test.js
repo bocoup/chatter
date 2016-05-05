@@ -2,7 +2,7 @@ import Promise from 'bluebird';
 import createConversation, {ConversingMessageHandler} from './conversation';
 import {DelegatingMessageHandler} from './delegate';
 
-describe('MatchingMessageHandler', function() {
+describe('ConversingMessageHandler', function() {
 
   describe('API', function() {
 
