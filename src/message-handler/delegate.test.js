@@ -22,7 +22,7 @@ describe('DelegatingMessageHandler', function() {
     it('should have sensible defaults for children / should yield false if no children were specified', function() {
       const delegate1 = createDelegate();
       const delegate2 = createDelegate({});
-      const delegate3 = createDelegate({children: []});
+      const delegate3 = createDelegate({handleMessage: []});
       return Promise.all([
         expect(delegate1.handleMessage()).to.eventually.equal(false),
         expect(delegate2.handleMessage()).to.eventually.equal(false),
@@ -32,7 +32,7 @@ describe('DelegatingMessageHandler', function() {
 
     it('should run child handlers in order / should yield false if no children returned a non-false value', function() {
       let i = 0;
-      const children = Array.from({length: 10}, (n, index) => {
+      const handleMessage = Array.from({length: 10}, (n, index) => {
         return {
           handleMessage() {
             expect(i++).to.equal(index);
@@ -40,7 +40,7 @@ describe('DelegatingMessageHandler', function() {
           },
         };
       });
-      const delegate = createDelegate({children});
+      const delegate = createDelegate({handleMessage});
       const promise = delegate.handleMessage('foo');
       return Promise.all([
         expect(promise).to.eventually.equal(false),
@@ -51,11 +51,11 @@ describe('DelegatingMessageHandler', function() {
     });
 
     it('should support function child handlers', function() {
-      const children = [
+      const handleMessage = [
         () => false,
         (response, a, b) => ({response: `${response} ${a} ${b}`}),
       ];
-      const delegate = createDelegate({children});
+      const delegate = createDelegate({handleMessage});
       return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
     });
 
@@ -65,43 +65,43 @@ describe('DelegatingMessageHandler', function() {
           return {response: `${response} ${a} ${b}`};
         },
       };
-      const delegate = createDelegate({children: child});
+      const delegate = createDelegate({handleMessage: child});
       return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
     });
 
     it('should support a single child handler (function) instead of array', function() {
       const child = (response, a, b) => ({response: `${response} ${a} ${b}`});
-      const delegate = createDelegate({children: child});
+      const delegate = createDelegate({handleMessage: child});
       return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
     });
 
     it('should pass additional arguments into child handlers', function() {
-      const children = [
+      const handleMessage = [
         {
           handleMessage(response, a, b) {
             return {response: `${response} ${a} ${b}`};
           },
         },
       ];
-      const delegate = createDelegate({children});
+      const delegate = createDelegate({handleMessage});
       return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
     });
 
     it('should reject if an exception is thrown in a child handler', function() {
-      const children = [
+      const handleMessage = [
         {
           handleMessage() {
             throw new Error('whoops');
           },
         },
       ];
-      const delegate = createDelegate({children});
+      const delegate = createDelegate({handleMessage});
       return expect(delegate.handleMessage('foo')).to.be.rejectedWith('whoops');
     });
 
     it('should yield the first non-false result and stop iterating', function() {
       let i = 0;
-      const children = [
+      const handleMessage = [
         {
           handleMessage() {
             i++;
@@ -121,7 +121,7 @@ describe('DelegatingMessageHandler', function() {
           },
         },
       ];
-      const delegate = createDelegate({children});
+      const delegate = createDelegate({handleMessage});
       const promise = delegate.handleMessage('foo');
       return Promise.all([
         expect(promise).to.become({response: 'a foo'}),
@@ -133,7 +133,7 @@ describe('DelegatingMessageHandler', function() {
 
     it('should resolve promises yielded by children', function() {
       let i = 0;
-      const children = [
+      const handleMessage = [
         {
           handleMessage() {
             i++;
@@ -159,7 +159,7 @@ describe('DelegatingMessageHandler', function() {
           },
         },
       ];
-      const delegate = createDelegate({children});
+      const delegate = createDelegate({handleMessage});
       const promise = delegate.handleMessage('foo');
       return Promise.all([
         expect(promise).to.become({response: 'a foo'}),

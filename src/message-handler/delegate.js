@@ -4,8 +4,7 @@ import {handleMessage} from '../util/message-handler';
 export class DelegatingMessageHandler {
 
   constructor(options = {}) {
-    const children = options.children || [];
-    this.children = children;
+    this.children = options.handleMessage || [];
   }
 
   // Iterate over all child handlers, returning a promise.

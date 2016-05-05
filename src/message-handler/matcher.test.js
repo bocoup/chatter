@@ -29,7 +29,7 @@ describe('MatchingMessageHandler', function() {
 
     it('should only run child handlers on match / should return false on no match', function() {
       let i = 0;
-      const children = [
+      const handleMessage = [
         {
           handleMessage() {
             i++;
@@ -37,7 +37,7 @@ describe('MatchingMessageHandler', function() {
           },
         },
       ];
-      const matcher = createMatcher({match: 'foo', children});
+      const matcher = createMatcher({match: 'foo', handleMessage});
       return Promise.mapSeries([
         () => expect(matcher.handleMessage('foo')).to.become({response: 'yay'}),
         () => expect(matcher.handleMessage('bar')).to.become(false),
@@ -46,23 +46,23 @@ describe('MatchingMessageHandler', function() {
     });
 
     it('should pass match remainder and additional arguments into child handlers', function() {
-      const children = [
+      const handleMessage = [
         {
           handleMessage(remainder, a, b) {
             return {response: `${remainder} ${a} ${b}`};
           },
         },
       ];
-      const matcher = createMatcher({match: 'foo', children});
+      const matcher = createMatcher({match: 'foo', handleMessage});
       return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
     });
 
     it('should support function child handlers', function() {
-      const children = [
+      const handleMessage = [
         () => false,
         (remainder, a, b) => ({response: `${remainder} ${a} ${b}`}),
       ];
-      const matcher = createMatcher({match: 'foo', children});
+      const matcher = createMatcher({match: 'foo', handleMessage});
       return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
     });
 
@@ -72,13 +72,13 @@ describe('MatchingMessageHandler', function() {
           return {response: `${remainder} ${a} ${b}`};
         },
       };
-      const matcher = createMatcher({match: 'foo', children: child});
+      const matcher = createMatcher({match: 'foo', handleMessage: child});
       return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
     });
 
     it('should support a single child handler (function) instead of array', function() {
       const child = (remainder, a, b) => ({response: `${remainder} ${a} ${b}`});
-      const matcher = createMatcher({match: 'foo', children: child});
+      const matcher = createMatcher({match: 'foo', handleMessage: child});
       return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
     });
 

@@ -51,16 +51,16 @@ describe('MatchingMessageHandler', function() {
         };
       };
       this.conversation = createConversation({
-        children: [nopChild, childThatReturnsDialog],
+        handleMessage: [nopChild, childThatReturnsDialog],
       });
       this.deepConversation = createConversation({
-        children: [nopChild, childThatReturnsNestedDialogs],
+        handleMessage: [nopChild, childThatReturnsNestedDialogs],
       });
       this.conversationObjectChild = createConversation({
-        children: childThatReturnsDialog,
+        handleMessage: childThatReturnsDialog,
       });
       this.deepConversationFunctionChild = createConversation({
-        children: childThatReturnsNestedDialogs,
+        handleMessage: childThatReturnsNestedDialogs,
       });
     });
 
