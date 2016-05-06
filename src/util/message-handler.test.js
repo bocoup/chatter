@@ -108,14 +108,14 @@ describe('message-handler', function() {
     });
 
     it('should reject if an exception is thrown in a child handler', function() {
-      const handler = [
+      const handlers = [
         {
           handleMessage() {
             throw new Error('whoops');
           },
         },
       ];
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.be.rejectedWith('whoops');
+      return expect(handleMessage(handlers, 'foo', 1, 2)).to.be.rejectedWith('whoops');
     });
 
     describe('complex examples', function() {
