@@ -1,24 +1,24 @@
 import Promise from 'bluebird';
-import {DelegatingMessageHandler} from './delegate';
+import {handleMessage} from '../util/message-handler';
 
-export class MatchingMessageHandler extends DelegatingMessageHandler {
+export class MatchingMessageHandler {
 
   constructor(options = {}) {
-    super(options);
     if (!('match' in options)) {
       throw new TypeError('Missing required "match" option.');
     }
     this.match = options.match;
+    this.children = options.handleMessage || [];
   }
 
-  // Pass remainder from match into child handlers, but only if match succeeds.
-  // Otherwise, yield false.
+  // If match succeeds, pass remainder into child handlers, yeilding their
+  // result. If no match, yield false.
   handleMessage(message = '', ...args) {
     const remainder = this.getMatchRemainder(message);
     if (remainder === false) {
       return Promise.resolve(false);
     }
-    return super.handleMessage(remainder, ...args);
+    return handleMessage(this.children, remainder, ...args);
   }
 
   // Determine if message matches. If not, return false, otherwise return the

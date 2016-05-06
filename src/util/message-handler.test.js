@@ -1,5 +1,7 @@
+/* eslint object-shorthand: 0 */
+
 import Promise from 'bluebird';
-import {callMessageHandler, handleMessage} from './message-handler';
+import {callMessageHandler, isMessageHandlerResult, handleMessage} from './message-handler';
 
 describe('message-handler', function() {
 
@@ -24,6 +26,36 @@ describe('message-handler', function() {
         },
       };
       expect(callMessageHandler(obj, 1, 2)).to.equal(3);
+    });
+
+  });
+
+  describe('isMessageHandlerResult', function() {
+
+    it('should return true for message handler functions', function() {
+      expect(isMessageHandlerResult(() => {})).to.equal(true);
+      expect(isMessageHandlerResult(function() {})).to.equal(true);
+      expect(isMessageHandlerResult(123)).to.equal(false);
+      expect(isMessageHandlerResult(null)).to.equal(false);
+      expect(isMessageHandlerResult(0)).to.equal(false);
+    });
+
+    it('should return true for message handler objects', function() {
+      expect(isMessageHandlerResult({handleMessage() {}})).to.equal(true);
+      expect(isMessageHandlerResult({handleMessage: () => {}})).to.equal(true);
+      expect(isMessageHandlerResult({handleMessage: function() {}})).to.equal(true);
+      expect(isMessageHandlerResult({bloops: function() {}})).to.equal(false);
+      expect(isMessageHandlerResult({})).to.equal(false);
+    });
+
+    it('should return true for arrays comprised only of message handler functions of objects', function() {
+      const f = () => {};
+      const o = {handleMessage() {}};
+      expect(isMessageHandlerResult([])).to.equal(true);
+      expect(isMessageHandlerResult([f, o, [], f, [o, [[[], [f]], []], o], f])).to.equal(true);
+      expect(isMessageHandlerResult([f, o, [o, f], f, [o, [f, o], f], f])).to.equal(true);
+      expect(isMessageHandlerResult([f, o, [o, f], f, [o, [null, o], f], f])).to.equal(false);
+      expect(isMessageHandlerResult([f, o, [o, f], f, [o, [f, o], 1], f])).to.equal(false);
     });
 
   });
@@ -96,7 +128,18 @@ describe('message-handler', function() {
         };
       });
 
-      it('should support nested arrays of handlers', function() {
+      it('should run handlers in order / should yield false if no children returned a non-false value', function() {
+        const handlers = 'abcdefgh'.split('').map(s => this.getHandler(s, false));
+        const promise = handleMessage(handlers, '<', '>');
+        return Promise.all([
+          expect(promise).to.become(false),
+          promise.then(() => {
+            expect(this.memo).to.equal('<a><b><c><d><e><f><g><h>');
+          }),
+        ]);
+      });
+
+      it('should run nested arrays of handlers in order', function() {
         const getHandler = this.getHandler;
         const handlers = [
           getHandler('a', false),
@@ -123,7 +166,7 @@ describe('message-handler', function() {
         ]);
       });
 
-      it('should allow handlers to return new handlers', function() {
+      it('should allow handlers to return new handlers or arrays of handlers', function() {
         const getHandler = this.getHandler;
         const handlers = [
           getHandler('a', false),
@@ -189,7 +232,7 @@ describe('message-handler', function() {
       });
 
       // Like the previous example but handlers return promises.
-      it('should alow handlers to return promises', function() {
+      it('should allow handlers to return promises', function() {
         const getHandler = (id, retval) => (message, arg) => {
           this.memo += message + id + arg;
           return Promise.resolve(retval);

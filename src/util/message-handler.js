@@ -1,40 +1,49 @@
 import Promise from 'bluebird';
 
-// Pass in a message handler, a message, and optional additional args, and the
-// message handler will be called. A message handler may be a function or
-// an object with a handleMessage method. A message handler may return a value
-// or a promise that yields a value.
-export function callMessageHandler(handler, message, ...args) {
+// Pass in a message handler and arguments, and the message handler will be
+// called with those arguments.
+//
+// A message handler may be a function or an object with a handleMessage method.
+// A message handler may return a value or a promise that yields a value.
+export function callMessageHandler(handler, ...args) {
   if (typeof handler === 'function') {
-    return handler(message, ...args);
+    return handler(...args);
   }
   else if (handler && handler.handleMessage) {
-    return handler.handleMessage(message, ...args);
+    return handler.handleMessage(...args);
   }
   throw new TypeError('Message handler must be a function or object with a handleMessage method.');
 }
 
 // Facilitate message handler result parsing.
 export function isMessageHandlerResult(val) {
-  return Array.isArray(val) || typeof val === 'function' || (val && val.handleMessage);
+  // Ensure arrays consist of only functions or message handler objects.
+  if (Array.isArray(val)) {
+    return val.every(item => isMessageHandlerResult(item));
+  }
+  // Return true if val is a function or message handler object.
+  return typeof val === 'function' || (val && typeof val.handleMessage === 'function') || false;
 }
 
-// Pass a message (and optional additional args) through a message handler or
-// (nested) arrays of message handlers. A message handler may be a function or
-// an object with a handleMessage method. A message handler may return a value
-// or a promise that yields a value. If the value is a message handler (per the
-// previous definition) or an array, it will be handled in-place. If the value
-// is false, the next message handler will be called. If the value is anything
-// else, iteration will stop and that value will be yielded.
-export function handleMessage(handlers, message, ...args) {
+// Pass specified arguments through a message handler or array of message
+// handlers.
+//
+// If a returned/yielded value is:
+// * a message handler or array of message handlers: unroll it/them inline
+// * false: skip to the the next message handler
+// * anything else: stop iteration and yield that value
+//
+// If iteration completes and no non-false value was returned/yielded, yield
+// false.
+export function handleMessage(handlers, ...args) {
   if (!Array.isArray(handlers)) {
-    return Promise.try(() => callMessageHandler(handlers, message, ...args));
+    return Promise.try(() => callMessageHandler(handlers, ...args));
   }
   const {length} = handlers;
   let i = 0;
   const next = f => Promise.try(f).then(result => {
     if (isMessageHandlerResult(result)) {
-      return next(() => handleMessage(result, message, ...args));
+      return next(() => handleMessage(result, ...args));
     }
     else if (result !== false) {
       return result;
@@ -42,7 +51,7 @@ export function handleMessage(handlers, message, ...args) {
     else if (i === length) {
       return false;
     }
-    return next(() => handleMessage(handlers[i++], message, ...args));
+    return next(() => handleMessage(handlers[i++], ...args));
   });
   return next(() => false);
 }

@@ -1,15 +1,13 @@
 import Promise from 'bluebird';
 import createMatcher, {MatchingMessageHandler} from './matcher';
-import {DelegatingMessageHandler} from './delegate';
 
 describe('MatchingMessageHandler', function() {
 
   describe('API', function() {
 
-    it('createMatcher should return an instance of MatchingMessageHandler, DelegatingMessageHandler', function() {
+    it('createMatcher should return an instance of MatchingMessageHandler', function() {
       const matcher = createMatcher({match: 'foo'});
       expect(matcher).to.be.an.instanceof(MatchingMessageHandler);
-      expect(matcher).to.be.an.instanceof(DelegatingMessageHandler);
     });
 
   });

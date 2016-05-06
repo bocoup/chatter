@@ -1,16 +1,13 @@
 import Promise from 'bluebird';
 import createConversation, {ConversingMessageHandler} from './conversation';
-import {DelegatingMessageHandler} from './delegate';
 
 describe('ConversingMessageHandler', function() {
 
   describe('API', function() {
 
-    it('createConversation should return an instance of ConversingMessageHandler, ' +
-       'DelegatingMessageHandler', function() {
+    it('createConversation should return an instance of ConversingMessageHandler', function() {
       const conversation = createConversation();
       expect(conversation).to.be.an.instanceof(ConversingMessageHandler);
-      expect(conversation).to.be.an.instanceof(DelegatingMessageHandler);
     });
 
   });
@@ -18,24 +15,28 @@ describe('ConversingMessageHandler', function() {
   describe('handleMessage', function() {
 
     beforeEach(function() {
+      // Object-type message handler
       const dialog = {
         handleMessage(message, a, b) {
           return {response: `dialog ${message} ${a} ${b}`};
         },
       };
-      const deepDialog = {
+      // Function-type message handler
+      const deepDialog = function(message, a, b) {
+        return {
+          response: `deep-dialog ${message} ${a} ${b}`,
+          dialog,
+        };
+      };
+      // Object-type message handler
+      const dialogThatThrows = {
         handleMessage(message, a, b) {
-          return {
-            response: `deep-dialog ${message} ${a} ${b}`,
-            dialog,
-          };
+          throw new Error(`whoops ${message} ${a} ${b}`);
         },
       };
-      const nopChild = {
-        handleMessage() {
-          return false;
-        },
-      };
+      // Function-type message handler
+      const returnsFalse = () => false;
+      // Object-type message handler
       const childThatReturnsDialog = {
         handleMessage(message, a, b) {
           return {
@@ -44,23 +45,33 @@ describe('ConversingMessageHandler', function() {
           };
         },
       };
+      // Function-type message handler
       const childThatReturnsNestedDialogs = (message, a, b) => {
         return {
           response: `${message} ${a} ${b}`,
           dialog: deepDialog,
         };
       };
+      const childThatReturnsThrowingDialog = (message, a, b) => {
+        return {
+          response: `${message} ${a} ${b}`,
+          dialog: dialogThatThrows,
+        };
+      };
       this.conversation = createConversation({
-        handleMessage: [nopChild, childThatReturnsDialog],
+        handleMessage: [returnsFalse, childThatReturnsDialog],
       });
       this.deepConversation = createConversation({
-        handleMessage: [nopChild, childThatReturnsNestedDialogs],
+        handleMessage: [returnsFalse, childThatReturnsNestedDialogs],
       });
       this.conversationObjectChild = createConversation({
         handleMessage: childThatReturnsDialog,
       });
       this.deepConversationFunctionChild = createConversation({
         handleMessage: childThatReturnsNestedDialogs,
+      });
+      this.conversationWithThrowingDialog = createConversation({
+        handleMessage: [returnsFalse, childThatReturnsThrowingDialog],
       });
     });
 
@@ -115,6 +126,15 @@ describe('ConversingMessageHandler', function() {
         () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
         () => conversation.clearDialog(),
         () => expect(conversation.handleMessage('bar', 3, 4)).to.become({response: 'bar 3 4'}),
+      ], f => f());
+    });
+
+    it('should clear the current dialog even if the dialog throws an exception', function() {
+      const conversation = this.conversationWithThrowingDialog;
+      return Promise.mapSeries([
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('bar', 3, 4)).to.be.rejectedWith('whoops bar 3 4'),
+        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({response: 'baz 5 6'}),
       ], f => f());
     });
 
