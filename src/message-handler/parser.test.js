@@ -60,27 +60,6 @@ describe('ParsingMessageHandler', function() {
       ]);
     });
 
-    it('should support an object message handler', function() {
-      const messageHandler = {
-        handleMessage(args, a, b) {
-          return {args, a, b};
-        },
-      };
-      const parser = createParser({
-        handleMessage: messageHandler,
-      });
-      return expect(parser.handleMessage('foo bar', 1, 2)).to.become({
-        args: {
-          input: 'foo bar',
-          errors: [],
-          options: {},
-          remain: ['foo', 'bar'],
-        },
-        a: 1,
-        b: 2,
-      });
-    });
-
   });
 
 });
