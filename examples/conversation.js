@@ -22,9 +22,31 @@ const askCommand = createMatcher({
     return {
       response: `Why do you want me to ask you a question, ${user.name}?`,
       dialog(message, {user}) {
-        return {response: `I'm not sure \`${message}\` is a good reason, ${user.name}.`};
+        return {
+          response: `I'm not sure "${message}" is a good reason, ${user.name}.`,
+        };
       },
     };
+  },
+});
+
+const chooseCommandChoices = [
+  createMatcher({match: m => m === 'a'}, () => ({response: 'Thank you for choosing a.'})),
+  createMatcher({match: m => m === 'b'}, () => ({response: 'Thank you for choosing b.'})),
+  createMatcher({match: m => m === 'c'}, () => ({response: 'Thank you for choosing c.'})),
+  message => ({
+    response: `I'm sorry, but "${message}" is an invalid choice, please try again.`,
+    dialog: chooseCommandChoices,
+  }),
+];
+
+const chooseCommand = createMatcher({
+  match: 'choose',
+  handleMessage(message, {user}) {
+    return {
+      response: `Choose one of the following, ${user.name}: a, b, or c.`,
+      dialog: chooseCommandChoices,
+    }
   },
 });
 
@@ -33,6 +55,7 @@ const fooCommand = createMatcher({match: 'foo'}, [
   barCommand,
   bazCommand,
   askCommand,
+  chooseCommand,
   (message, {user}) => ({response: `foo received <${message}> from <${user.name}>`}),
 ]);
 
@@ -61,12 +84,12 @@ function simulate(username, message) {
   return myBot.getConversation(user.name).handleMessage(message, {user})
     .then(data => {
       if (data === false) {
-        return logBot(`Sorry, I don't understand \`${message}\`.`);
+        return logBot(`Sorry, I don't understand "${message}".`);
       }
       logBot(data.response);
     })
     .catch(error => {
-      logBot(`Error encountered: \`${error.message}\`.`);
+      logBot(`Error encountered: "${error.message}".`);
     });
 }
 
@@ -80,6 +103,10 @@ Promise.mapSeries([
   () => simulate('joe', 'foo should be parsed by the foo fallback handler'),
   () => simulate('joe', 'foo ask'),
   () => simulate('cowboy', 'because i said so?'),
+  () => simulate('cowboy', 'foo choose'),
+  () => simulate('cowboy', 'foo bar'),
+  () => simulate('cowboy', 'a walk in the park'),
   () => simulate('joe', 'i dunno'),
+  () => simulate('cowboy', 'a'),
   () => simulate('cowboy', 'foo should be parsed by the foo fallback handler'),
 ], f => f());
