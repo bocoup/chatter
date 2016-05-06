@@ -1,6 +1,8 @@
 import Promise from 'bluebird';
 import createParser, {ParsingMessageHandler} from './parser';
 
+const nop = () => {};
+
 describe('ParsingMessageHandler', function() {
 
   describe('API', function() {
@@ -10,15 +12,14 @@ describe('ParsingMessageHandler', function() {
       expect(parser).to.be.an.instanceof(ParsingMessageHandler);
     });
 
+    it('should behave like DelegatingMessageHandler', function() {
+      expect(() => createParser(nop)).to.not.throw();
+      expect(() => createParser()).to.throw(/missing.*message.*handlers/i);
+    });
+
   });
 
   describe('handleMessage', function() {
-
-    it('should throw if no handleMessage option was specified', function() {
-      expect(() => createParser()).to.throw(/missing.*handleMessage/i);
-      expect(() => createParser({})).to.throw(/missing.*handleMessage/i);
-      expect(() => createParser({handleMessage() {}})).to.not.throw();
-    });
 
     it('should return a promise that gets fulfilled', function() {
       const parser = createParser({handleMessage() {}});

@@ -1,7 +1,7 @@
 /* eslint object-shorthand: 0 */
 
 import Promise from 'bluebird';
-import {callMessageHandler, isMessageHandlerResult, handleMessage} from './message-handler';
+import {callMessageHandler, isMessageHandlerOrHandlers, handleMessage} from './message-handler';
 
 describe('message-handler', function() {
 
@@ -30,32 +30,32 @@ describe('message-handler', function() {
 
   });
 
-  describe('isMessageHandlerResult', function() {
+  describe('isMessageHandlerOrHandlers', function() {
 
     it('should return true for message handler functions', function() {
-      expect(isMessageHandlerResult(() => {})).to.equal(true);
-      expect(isMessageHandlerResult(function() {})).to.equal(true);
-      expect(isMessageHandlerResult(123)).to.equal(false);
-      expect(isMessageHandlerResult(null)).to.equal(false);
-      expect(isMessageHandlerResult(0)).to.equal(false);
+      expect(isMessageHandlerOrHandlers(() => {})).to.equal(true);
+      expect(isMessageHandlerOrHandlers(function() {})).to.equal(true);
+      expect(isMessageHandlerOrHandlers(123)).to.equal(false);
+      expect(isMessageHandlerOrHandlers(null)).to.equal(false);
+      expect(isMessageHandlerOrHandlers(0)).to.equal(false);
     });
 
     it('should return true for message handler objects', function() {
-      expect(isMessageHandlerResult({handleMessage() {}})).to.equal(true);
-      expect(isMessageHandlerResult({handleMessage: () => {}})).to.equal(true);
-      expect(isMessageHandlerResult({handleMessage: function() {}})).to.equal(true);
-      expect(isMessageHandlerResult({bloops: function() {}})).to.equal(false);
-      expect(isMessageHandlerResult({})).to.equal(false);
+      expect(isMessageHandlerOrHandlers({handleMessage() {}})).to.equal(true);
+      expect(isMessageHandlerOrHandlers({handleMessage: () => {}})).to.equal(true);
+      expect(isMessageHandlerOrHandlers({handleMessage: function() {}})).to.equal(true);
+      expect(isMessageHandlerOrHandlers({bloops: function() {}})).to.equal(false);
+      expect(isMessageHandlerOrHandlers({})).to.equal(false);
     });
 
     it('should return true for arrays comprised only of message handler functions of objects', function() {
       const f = () => {};
       const o = {handleMessage() {}};
-      expect(isMessageHandlerResult([])).to.equal(true);
-      expect(isMessageHandlerResult([f, o, [], f, [o, [[[], [f]], []], o], f])).to.equal(true);
-      expect(isMessageHandlerResult([f, o, [o, f], f, [o, [f, o], f], f])).to.equal(true);
-      expect(isMessageHandlerResult([f, o, [o, f], f, [o, [null, o], f], f])).to.equal(false);
-      expect(isMessageHandlerResult([f, o, [o, f], f, [o, [f, o], 1], f])).to.equal(false);
+      expect(isMessageHandlerOrHandlers([])).to.equal(true);
+      expect(isMessageHandlerOrHandlers([f, o, [], f, [o, [[[], [f]], []], o], f])).to.equal(true);
+      expect(isMessageHandlerOrHandlers([f, o, [o, f], f, [o, [f, o], f], f])).to.equal(true);
+      expect(isMessageHandlerOrHandlers([f, o, [o, f], f, [o, [null, o], f], f])).to.equal(false);
+      expect(isMessageHandlerOrHandlers([f, o, [o, f], f, [o, [f, o], 1], f])).to.equal(false);
     });
 
   });

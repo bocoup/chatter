@@ -4,28 +4,24 @@ import createParser from '../src/message-handler/parser';
 import createBot from '../src/bot';
 
 // foo top level command's subcommands
-const barCommand = createMatcher({
-  match: 'bar',
-  handleMessage: createParser({
-    handleMessage(args, {user, channel}) {
-      return {response: `bar received <${args.input}> from <${user.name}>`};
-    },
-  }),
-});
+const barCommand = createMatcher({match: 'bar'}, createParser((args, {user}) => {
+  return {
+    response: `bar received <${args.input}> from <${user.name}>`,
+  };
+}));
 
-const bazCommand = createMatcher({
-  match: 'baz',
-  handleMessage(message, {user, channel}) {
-    return {response: `baz received <${message}> from <${user.name}>`};
-  },
+const bazCommand = createMatcher({match: 'baz'}, (message, {user}) => {
+  return {
+    response: `baz received <${message}> from <${user.name}>`,
+  };
 });
 
 const askCommand = createMatcher({
   match: 'ask',
-  handleMessage(message, {user, channel}) {
+  handleMessage(message, {user}) {
     return {
       response: `Why do you want me to ask you a question, ${user.name}?`,
-      dialog(message, {user, channel}) {
+      dialog(message, {user}) {
         return {response: `I'm not sure \`${message}\` is a good reason, ${user.name}.`};
       },
     };
@@ -33,21 +29,18 @@ const askCommand = createMatcher({
 });
 
 // foo top-level command
-const fooCommand = createMatcher({
-  match: 'foo',
-  handleMessage: [
-    barCommand,
-    bazCommand,
-    askCommand,
-    (message, {user, channel}) => ({response: `foo received <${message}> from <${user.name}>`}),
-  ],
-});
+const fooCommand = createMatcher({match: 'foo'}, [
+  barCommand,
+  bazCommand,
+  askCommand,
+  (message, {user}) => ({response: `foo received <${message}> from <${user.name}>`}),
+]);
 
 // qux top-level command
 const quxCommand = createMatcher({
   match: 'qux',
   handleMessage: createParser({
-    handleMessage(args, {user, channel}) {
+    handleMessage(args, {user}) {
       throw new Error(`qux error`);
     },
   }),
@@ -55,13 +48,11 @@ const quxCommand = createMatcher({
 
 // Bot
 const myBot = createBot({
-  createConversation,
-  handleMessage: [
+  createConversation: () => createConversation([
     fooCommand,
     quxCommand,
-  ],
+  ]),
 });
-
 
 function simulate(username, message) {
   const user = {name: username};

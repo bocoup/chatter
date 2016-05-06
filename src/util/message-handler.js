@@ -16,10 +16,10 @@ export function callMessageHandler(handler, ...args) {
 }
 
 // Facilitate message handler result parsing.
-export function isMessageHandlerResult(val) {
+export function isMessageHandlerOrHandlers(val) {
   // Ensure arrays consist of only functions or message handler objects.
   if (Array.isArray(val)) {
-    return val.every(item => isMessageHandlerResult(item));
+    return val.every(item => isMessageHandlerOrHandlers(item));
   }
   // Return true if val is a function or message handler object.
   return typeof val === 'function' || (val && typeof val.handleMessage === 'function') || false;
@@ -42,7 +42,7 @@ export function handleMessage(handlers, ...args) {
   const {length} = handlers;
   let i = 0;
   const next = f => Promise.try(f).then(result => {
-    if (isMessageHandlerResult(result)) {
+    if (isMessageHandlerOrHandlers(result)) {
       return next(() => handleMessage(result, ...args));
     }
     else if (result !== false) {

@@ -1,9 +1,10 @@
 import {handleMessage} from '../util/message-handler';
+import {DelegatingMessageHandler} from './delegate';
 
-export class ConversingMessageHandler {
+export class ConversingMessageHandler extends DelegatingMessageHandler {
 
-  constructor(options = {}) {
-    this.children = options.handleMessage || [];
+  constructor(options = {}, children) {
+    super(options, children);
     this.dialog = null;
   }
 
@@ -34,6 +35,6 @@ export class ConversingMessageHandler {
 
 }
 
-export default function createConversation(options) {
-  return new ConversingMessageHandler(options);
+export default function createConversation(...args) {
+  return new ConversingMessageHandler(...args);
 }

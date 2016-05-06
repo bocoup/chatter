@@ -1,9 +1,23 @@
-import {handleMessage} from '../util/message-handler';
+import {handleMessage, isMessageHandlerOrHandlers} from '../util/message-handler';
 
 export class DelegatingMessageHandler {
 
-  constructor(options = {}) {
-    this.children = options.handleMessage || [];
+  constructor(options = {}, children) {
+    // Validate these signatures.
+    // Only options:
+    //   createDelegate({handleMessage: fn, ...})
+    // Only children:
+    //   createDelegate(fn)
+    //   createDelegate({handleMessage: fn})
+    //   createDelegate([...])
+    // Both options and children:
+    //   createDelegate({...}, fn)
+    //   createDelegate({...}, {handleMessage: fn})
+    //   createDelegate({...}, [...])
+    this.children = children || options.handleMessage || options;
+    if (!isMessageHandlerOrHandlers(this.children)) {
+      throw new TypeError('Missing required message handlers.');
+    }
   }
 
   // Iterate over all child handlers, yielding the first non-false result.
@@ -13,6 +27,6 @@ export class DelegatingMessageHandler {
 
 }
 
-export default function createDelegate(options) {
-  return new DelegatingMessageHandler(options);
+export default function createDelegate(...args) {
+  return new DelegatingMessageHandler(...args);
 }

@@ -1,13 +1,20 @@
 import Promise from 'bluebird';
 import createConversation, {ConversingMessageHandler} from './conversation';
 
+const nop = () => {};
+
 describe('ConversingMessageHandler', function() {
 
   describe('API', function() {
 
     it('createConversation should return an instance of ConversingMessageHandler', function() {
-      const conversation = createConversation();
+      const conversation = createConversation(nop);
       expect(conversation).to.be.an.instanceof(ConversingMessageHandler);
+    });
+
+    it('should behave like DelegatingMessageHandler', function() {
+      expect(() => createConversation(nop)).to.not.throw();
+      expect(() => createConversation()).to.throw(/missing.*message.*handlers/i);
     });
 
   });
@@ -76,7 +83,7 @@ describe('ConversingMessageHandler', function() {
     });
 
     it('should return a promise that gets fulfilled', function() {
-      const conversation = createConversation();
+      const conversation = createConversation(nop);
       return expect(conversation.handleMessage()).to.be.fulfilled();
     });
 

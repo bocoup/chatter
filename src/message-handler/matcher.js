@@ -1,14 +1,14 @@
 import Promise from 'bluebird';
-import {handleMessage} from '../util/message-handler';
+import {DelegatingMessageHandler} from './delegate';
 
-export class MatchingMessageHandler {
+export class MatchingMessageHandler extends DelegatingMessageHandler {
 
-  constructor(options = {}) {
+  constructor(options = {}, children) {
+    super(options, children);
     if (!('match' in options)) {
       throw new TypeError('Missing required "match" option.');
     }
     this.match = options.match;
-    this.children = options.handleMessage || [];
   }
 
   // If match succeeds, pass remainder into child handlers, yielding their
@@ -19,7 +19,7 @@ export class MatchingMessageHandler {
       if (remainder === false) {
         return false;
       }
-      return handleMessage(this.children, remainder, ...args);
+      return super.handleMessage(remainder, ...args);
     });
   }
 
@@ -49,6 +49,6 @@ export class MatchingMessageHandler {
 
 }
 
-export default function createMatcher(options) {
-  return new MatchingMessageHandler(options);
+export default function createMatcher(...args) {
+  return new MatchingMessageHandler(...args);
 }

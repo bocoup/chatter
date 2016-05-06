@@ -1,13 +1,37 @@
-import Promise from 'bluebird';
 import createDelegate, {DelegatingMessageHandler} from './delegate';
+
+const nop = () => {};
 
 describe('DelegatingMessageHandler', function() {
 
   describe('API', function() {
 
     it('createDelegate should return an instance of DelegatingMessageHandler', function() {
-      const delegate = createDelegate();
+      const delegate = createDelegate(nop);
       expect(delegate).to.be.an.instanceof(DelegatingMessageHandler);
+    });
+
+    it('should throw if no/invalid message handlers were specified', function() {
+      // Valid
+      expect(() => createDelegate({handleMessage: nop, other: true})).to.not.throw();
+      expect(() => createDelegate(nop)).to.not.throw();
+      expect(() => createDelegate({handleMessage: nop})).to.not.throw();
+      expect(() => createDelegate([])).to.not.throw();
+      expect(() => createDelegate([nop])).to.not.throw();
+      expect(() => createDelegate([{handleMessage: nop}])).to.not.throw();
+      expect(() => createDelegate({}, nop)).to.not.throw();
+      expect(() => createDelegate({}, {handleMessage: nop})).to.not.throw();
+      expect(() => createDelegate({}, [])).to.not.throw();
+      expect(() => createDelegate({}, [nop])).to.not.throw();
+      expect(() => createDelegate({}, [{handleMessage: nop}])).to.not.throw();
+      // Invalid
+      expect(() => createDelegate()).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate(123)).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate({})).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate([123])).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate({}, {handleMessage: 123})).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate({}, 123)).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate({}, [123])).to.throw(/missing.*message.*handlers/i);
     });
 
   });
@@ -15,19 +39,8 @@ describe('DelegatingMessageHandler', function() {
   describe('handleMessage', function() {
 
     it('should return a promise that gets fulfilled', function() {
-      const delegate = createDelegate();
+      const delegate = createDelegate(nop);
       return expect(delegate.handleMessage()).to.be.fulfilled();
-    });
-
-    it('should have sensible defaults for children / should yield false if no children were specified', function() {
-      const delegate1 = createDelegate();
-      const delegate2 = createDelegate({});
-      const delegate3 = createDelegate({handleMessage: []});
-      return Promise.all([
-        expect(delegate1.handleMessage()).to.eventually.equal(false),
-        expect(delegate2.handleMessage()).to.eventually.equal(false),
-        expect(delegate3.handleMessage()).to.eventually.equal(false),
-      ]);
     });
 
     it('should pass additional arguments into child handlers', function() {
@@ -45,13 +58,13 @@ describe('DelegatingMessageHandler', function() {
     it('should reject if an exception is thrown in a child handler', function() {
       const handleMessage = [
         {
-          handleMessage() {
-            throw new Error('whoops');
+          handleMessage(message) {
+            throw new Error(`whoops ${message}`);
           },
         },
       ];
       const delegate = createDelegate({handleMessage});
-      return expect(delegate.handleMessage('foo')).to.be.rejectedWith('whoops');
+      return expect(delegate.handleMessage('foo')).to.be.rejectedWith('whoops foo');
     });
 
   });
