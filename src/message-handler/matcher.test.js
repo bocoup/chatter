@@ -18,6 +18,7 @@ describe('MatchingMessageHandler', function() {
       expect(() => createMatcher()).to.throw(/missing.*match/i);
       expect(() => createMatcher({})).to.throw(/missing.*match/i);
       expect(() => createMatcher({match: 'foo'})).to.not.throw();
+      expect(() => createMatcher({match() {}})).to.not.throw();
     });
 
     it('should return a promise that gets fulfilled', function() {
@@ -27,14 +28,10 @@ describe('MatchingMessageHandler', function() {
 
     it('should only run child handlers on match / should return false on no match', function() {
       let i = 0;
-      const handleMessage = [
-        {
-          handleMessage() {
-            i++;
-            return {response: 'yay'};
-          },
-        },
-      ];
+      const handleMessage = () => {
+        i++;
+        return {response: 'yay'};
+      };
       const matcher = createMatcher({match: 'foo', handleMessage});
       return Promise.mapSeries([
         () => expect(matcher.handleMessage('foo')).to.become({response: 'yay'}),
@@ -43,41 +40,39 @@ describe('MatchingMessageHandler', function() {
       ], f => f());
     });
 
-    it('should pass match remainder and additional arguments into child handlers', function() {
-      const handleMessage = [
-        {
-          handleMessage(remainder, a, b) {
-            return {response: `${remainder} ${a} ${b}`};
-          },
-        },
-      ];
+    it('should support string matching / should trim leading space from the remainder', function() {
+      const handleMessage = (remainder, arg) => ({response: `${remainder} ${arg}`});
       const matcher = createMatcher({match: 'foo', handleMessage});
-      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
+      return Promise.all([
+        expect(matcher.handleMessage('foo bar', 1)).to.become({response: 'bar 1'}),
+        expect(matcher.handleMessage('foo    bar', 1)).to.become({response: 'bar 1'}),
+      ]);
     });
 
-    it('should support function child handlers', function() {
-      const handleMessage = [
-        () => false,
-        (remainder, a, b) => ({response: `${remainder} ${a} ${b}`}),
-      ];
-      const matcher = createMatcher({match: 'foo', handleMessage});
-      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
-    });
-
-    it('should support a single child handler (object) instead of array', function() {
-      const child = {
-        handleMessage(remainder, a, b) {
-          return {response: `${remainder} ${a} ${b}`};
-        },
+    it('should support function matching / should pass message and additional arguments into match fn', function() {
+      const match = (message, arg) => {
+        const [greeting, remainder] = message.split(' ');
+        return greeting === 'hello' ? `the ${remainder} is ${arg}` : false;
       };
-      const matcher = createMatcher({match: 'foo', handleMessage: child});
-      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
+      const handleMessage = (remainder, arg) => ({response: `${remainder}, ${arg}`});
+      const matcher = createMatcher({match, handleMessage});
+      return Promise.all([
+        expect(matcher.handleMessage('hello world', 'me')).to.become({response: 'the world is me, me'}),
+        expect(matcher.handleMessage('hello universe', 'me')).to.become({response: 'the universe is me, me'}),
+        expect(matcher.handleMessage('goodbye world', 'me')).to.become(false),
+        expect(matcher.handleMessage('goodbye universe', 'me')).to.become(false),
+      ]);
     });
 
-    it('should support a single child handler (function) instead of array', function() {
-      const child = (remainder, a, b) => ({response: `${remainder} ${a} ${b}`});
-      const matcher = createMatcher({match: 'foo', handleMessage: child});
-      return expect(matcher.handleMessage('foo bar', 1, 2)).to.become({response: 'bar 1 2'});
+    it('should reject if the match option is invalid', function() {
+      const matcher = createMatcher({match: 123, handleMessage() {}});
+      return expect(matcher.handleMessage('foo')).to.be.rejectedWith(/invalid.*match/i);
+    });
+
+    it('should reject if the match function throws an exception', function() {
+      const match = message => { throw new Error(`whoops ${message}`); };
+      const matcher = createMatcher({match, handleMessage() {}});
+      return expect(matcher.handleMessage('foo')).to.be.rejectedWith('whoops foo');
     });
 
   });
