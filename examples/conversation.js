@@ -1,7 +1,4 @@
-import createConversation from '../src/message-handler/conversation';
-import createMatcher from '../src/message-handler/matcher';
-import createParser from '../src/message-handler/parser';
-import createBot from '../src/bot';
+import {createBot, createConversation, createMatcher, createParser} from '../src';
 
 // foo top level command's subcommands
 const barCommand = createMatcher({match: 'bar'}, createParser((args, {user}) => {
