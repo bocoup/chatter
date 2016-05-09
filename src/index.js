@@ -1,5 +1,6 @@
 // Bot
 export {Bot, default as createBot} from './bot';
+export {SlackBot, default as createSlackBot} from './slack';
 
 // Message handlers
 export {DelegatingMessageHandler, default as createDelegate} from './message-handler/delegate';
