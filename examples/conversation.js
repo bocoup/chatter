@@ -3,13 +3,13 @@ import {createBot, createConversation, createMatcher, createParser} from '../src
 // foo top level command's subcommands
 const barCommand = createMatcher({match: 'bar'}, createParser((args, {user}) => {
   return {
-    response: `bar received <${args.input}> from <${user.name}>`,
+    message: `bar received <${args.input}> from <${user.name}>`,
   };
 }));
 
 const bazCommand = createMatcher({match: 'baz'}, (message, {user}) => {
   return {
-    response: `baz received <${message}> from <${user.name}>`,
+    message: `baz received <${message}> from <${user.name}>`,
   };
 });
 
@@ -17,10 +17,10 @@ const askCommand = createMatcher({
   match: 'ask',
   handleMessage(message, {user}) {
     return {
-      response: `Why do you want me to ask you a question, ${user.name}?`,
+      message: `Why do you want me to ask you a question, ${user.name}?`,
       dialog(message, {user}) {
         return {
-          response: `I'm not sure "${message}" is a good reason, ${user.name}.`,
+          message: `I'm not sure "${message}" is a good reason, ${user.name}.`,
         };
       },
     };
@@ -28,11 +28,11 @@ const askCommand = createMatcher({
 });
 
 const chooseCommandChoices = [
-  createMatcher({match: m => m === 'a'}, () => ({response: 'Thank you for choosing a.'})),
-  createMatcher({match: m => m === 'b'}, () => ({response: 'Thank you for choosing b.'})),
-  createMatcher({match: m => m === 'c'}, () => ({response: 'Thank you for choosing c.'})),
+  createMatcher({match: m => m === 'a'}, () => ({message: 'Thank you for choosing a.'})),
+  createMatcher({match: m => m === 'b'}, () => ({message: 'Thank you for choosing b.'})),
+  createMatcher({match: m => m === 'c'}, () => ({message: 'Thank you for choosing c.'})),
   message => ({
-    response: `I'm sorry, but "${message}" is an invalid choice, please try again.`,
+    message: `I'm sorry, but "${message}" is an invalid choice, please try again.`,
     dialog: chooseCommandChoices,
   }),
 ];
@@ -41,7 +41,7 @@ const chooseCommand = createMatcher({
   match: 'choose',
   handleMessage(message, {user}) {
     return {
-      response: `Choose one of the following, ${user.name}: a, b, or c.`,
+      message: `Choose one of the following, ${user.name}: a, b, or c.`,
       dialog: chooseCommandChoices,
     }
   },
@@ -53,7 +53,7 @@ const fooCommand = createMatcher({match: 'foo'}, [
   bazCommand,
   askCommand,
   chooseCommand,
-  (message, {user}) => ({response: `foo received <${message}> from <${user.name}>`}),
+  (message, {user}) => ({message: `foo received <${message}> from <${user.name}>`}),
 ]);
 
 // qux top-level command
@@ -79,11 +79,11 @@ function simulate(username, message) {
   console.log(`[${username}] ${message}`);
   const logBot = message => { console.log(`= ${message}\n`); };
   return myBot.getConversation(user.name).handleMessage(message, {user})
-    .then(data => {
-      if (data === false) {
+    .then(response => {
+      if (response === false) {
         return logBot(`Sorry, I don't understand "${message}".`);
       }
-      logBot(data.response);
+      logBot(response.message);
     })
     .catch(error => {
       logBot(`Error encountered: "${error.message}".`);

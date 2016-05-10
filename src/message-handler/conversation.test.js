@@ -25,13 +25,13 @@ describe('ConversingMessageHandler', function() {
       // Object-type message handler
       const dialog = {
         handleMessage(message, a, b) {
-          return {response: `dialog ${message} ${a} ${b}`};
+          return {message: `dialog ${message} ${a} ${b}`};
         },
       };
       // Function-type message handler
       const deepDialog = function(message, a, b) {
         return {
-          response: `deep-dialog ${message} ${a} ${b}`,
+          message: `deep-dialog ${message} ${a} ${b}`,
           dialog,
         };
       };
@@ -47,7 +47,7 @@ describe('ConversingMessageHandler', function() {
       const childThatReturnsDialog = {
         handleMessage(message, a, b) {
           return {
-            response: `${message} ${a} ${b}`,
+            message: `${message} ${a} ${b}`,
             dialog,
           };
         },
@@ -55,13 +55,13 @@ describe('ConversingMessageHandler', function() {
       // Function-type message handler
       const childThatReturnsNestedDialogs = (message, a, b) => {
         return {
-          response: `${message} ${a} ${b}`,
+          message: `${message} ${a} ${b}`,
           dialog: deepDialog,
         };
       };
       const childThatReturnsThrowingDialog = (message, a, b) => {
         return {
-          response: `${message} ${a} ${b}`,
+          message: `${message} ${a} ${b}`,
           dialog: dialogThatThrows,
         };
       };
@@ -90,19 +90,19 @@ describe('ConversingMessageHandler', function() {
     it('should delegate to a returned message handler on the next message', function() {
       const conversation = this.conversation;
       return Promise.mapSeries([
-        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
-        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({response: 'dialog bar 3 4'}),
-        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({response: 'baz 5 6'}),
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({message: 'dialog bar 3 4'}),
+        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({message: 'baz 5 6'}),
       ], f => f());
     });
 
     it('should allow deeply nested dialogs / should support function child handlers', function() {
       const conversation = this.deepConversation;
       return Promise.mapSeries([
-        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
-        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({response: 'deep-dialog bar 3 4'}),
-        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({response: 'dialog baz 5 6'}),
-        () => expect(conversation.handleMessage('qux', 7, 8)).to.become({response: 'qux 7 8'}),
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({message: 'deep-dialog bar 3 4'}),
+        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({message: 'dialog baz 5 6'}),
+        () => expect(conversation.handleMessage('qux', 7, 8)).to.become({message: 'qux 7 8'}),
       ], f => f());
     });
 
@@ -111,37 +111,37 @@ describe('ConversingMessageHandler', function() {
     it('should support a single child handler (object) instead of array', function() {
       const conversation = this.conversationObjectChild;
       return Promise.mapSeries([
-        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
-        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({response: 'dialog bar 3 4'}),
-        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({response: 'baz 5 6'}),
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({message: 'dialog bar 3 4'}),
+        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({message: 'baz 5 6'}),
       ], f => f());
     });
 
     it('should support a single child handler (function) instead of array', function() {
       const conversation = this.deepConversationFunctionChild;
       return Promise.mapSeries([
-        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
-        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({response: 'deep-dialog bar 3 4'}),
-        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({response: 'dialog baz 5 6'}),
-        () => expect(conversation.handleMessage('qux', 7, 8)).to.become({response: 'qux 7 8'}),
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({message: 'deep-dialog bar 3 4'}),
+        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({message: 'dialog baz 5 6'}),
+        () => expect(conversation.handleMessage('qux', 7, 8)).to.become({message: 'qux 7 8'}),
       ], f => f());
     });
 
     it('should clear the current dialog with .clearDialog', function() {
       const conversation = this.conversation;
       return Promise.mapSeries([
-        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'}),
         () => conversation.clearDialog(),
-        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({response: 'bar 3 4'}),
+        () => expect(conversation.handleMessage('bar', 3, 4)).to.become({message: 'bar 3 4'}),
       ], f => f());
     });
 
     it('should clear the current dialog even if the dialog throws an exception', function() {
       const conversation = this.conversationWithThrowingDialog;
       return Promise.mapSeries([
-        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'}),
+        () => expect(conversation.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'}),
         () => expect(conversation.handleMessage('bar', 3, 4)).to.be.rejectedWith('whoops bar 3 4'),
-        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({response: 'baz 5 6'}),
+        () => expect(conversation.handleMessage('baz', 5, 6)).to.become({message: 'baz 5 6'}),
       ], f => f());
     });
 

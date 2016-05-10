@@ -84,27 +84,27 @@ describe('message-handler', function() {
     });
 
     it('should support a single function handler', function() {
-      const handler = (response, a, b) => ({response: `${response} ${a} ${b}`});
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({response: 'foo 1 2'});
+      const handler = (message, a, b) => ({message: `${message} ${a} ${b}`});
+      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     it('should support a single object handler', function() {
       const handler = {
-        handleMessage(response, a, b) {
-          return {response: `${response} ${a} ${b}`};
+        handleMessage(message, a, b) {
+          return {message: `${message} ${a} ${b}`};
         },
       };
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({response: 'foo 1 2'});
+      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     // Like the previous example, but handler returns a promise.
     it('should resolve promises yielded by handlers', function() {
       const handler = {
-        handleMessage(response, a, b) {
-          return Promise.resolve({response: `${response} ${a} ${b}`}); // THIS LINE IS DIFFERENT
+        handleMessage(message, a, b) {
+          return Promise.resolve({message: `${message} ${a} ${b}`}); // THIS LINE IS DIFFERENT
         },
       };
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({response: 'foo 1 2'});
+      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     it('should reject if an exception is thrown in a child handler', function() {
@@ -155,11 +155,11 @@ describe('message-handler', function() {
             ],
             getHandler('g', false),
           ],
-          getHandler('h', {response: 'done'}),
+          getHandler('h', {message: 'done'}),
         ];
         const promise = handleMessage(handlers, '<', '>');
         return Promise.all([
-          expect(promise).to.become({response: 'done'}),
+          expect(promise).to.become({message: 'done'}),
           promise.then(() => {
             expect(this.memo).to.equal('<a><b><c><d><e><f><g><h>');
           }),
@@ -187,19 +187,19 @@ describe('message-handler', function() {
             ],
             getHandler('g', false),
           ],
-          getHandler('h', {response: 'done'}),
+          getHandler('h', {message: 'done'}),
         ];
         const promise = handleMessage(handlers, '<', '>');
         return Promise.all([
-          expect(promise).to.become({response: 'done'}),
+          expect(promise).to.become({message: 'done'}),
           promise.then(() => {
             expect(this.memo).to.equal('<a><b><bb><c><cc><d><d1><d2><d3><d4><e><f><g><h>');
           }),
         ]);
       });
 
-      // Like the previous example but handler 'd4' returns an actual response.
-      it('should stop iterating when a non-false, non-handler response is received', function() {
+      // Like the previous example but handler 'd4' returns an actual message.
+      it('should stop iterating when a non-false, non-handler message is received', function() {
         const getHandler = this.getHandler;
         const handlers = [
           getHandler('a', false),
@@ -211,7 +211,7 @@ describe('message-handler', function() {
                 getHandler('d', [
                   getHandler('d1', false),
                   getHandler('d2', [
-                    getHandler('d3', getHandler('d4', {response: 'early'})), // THIS LINE IS DIFFERENT
+                    getHandler('d3', getHandler('d4', {message: 'early'})), // THIS LINE IS DIFFERENT
                   ]),
                 ]),
                 getHandler('e', false),
@@ -220,11 +220,11 @@ describe('message-handler', function() {
             ],
             getHandler('g', false),
           ],
-          getHandler('h', {response: 'done'}),
+          getHandler('h', {message: 'done'}),
         ];
         const promise = handleMessage(handlers, '<', '>');
         return Promise.all([
-          expect(promise).to.become({response: 'early'}),
+          expect(promise).to.become({message: 'early'}),
           promise.then(() => {
             expect(this.memo).to.equal('<a><b><bb><c><cc><d><d1><d2><d3><d4>');
           }),
@@ -247,7 +247,7 @@ describe('message-handler', function() {
                 getHandler('d', [
                   getHandler('d1', false),
                   getHandler('d2', [
-                    getHandler('d3', getHandler('d4', {response: 'early'})),
+                    getHandler('d3', getHandler('d4', {message: 'early'})),
                   ]),
                 ]),
                 getHandler('e', false),
@@ -256,11 +256,11 @@ describe('message-handler', function() {
             ],
             getHandler('g', false),
           ],
-          getHandler('h', {response: 'done'}),
+          getHandler('h', {message: 'done'}),
         ];
         const promise = handleMessage(handlers, '<', '>');
         return Promise.all([
-          expect(promise).to.become({response: 'early'}),
+          expect(promise).to.become({message: 'early'}),
           promise.then(() => {
             expect(this.memo).to.equal('<a><b><bb><c><cc><d><d1><d2><d3><d4>');
           }),

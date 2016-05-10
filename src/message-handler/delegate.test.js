@@ -46,13 +46,13 @@ describe('DelegatingMessageHandler', function() {
     it('should pass additional arguments into child handlers', function() {
       const handleMessage = [
         {
-          handleMessage(response, a, b) {
-            return {response: `${response} ${a} ${b}`};
+          handleMessage(message, a, b) {
+            return {message: `${message} ${a} ${b}`};
           },
         },
       ];
       const delegate = createDelegate({handleMessage});
-      return expect(delegate.handleMessage('foo', 1, 2)).to.become({response: 'foo 1 2'});
+      return expect(delegate.handleMessage('foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     it('should reject if an exception is thrown in a child handler', function() {

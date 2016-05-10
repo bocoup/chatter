@@ -37,22 +37,22 @@ describe('MatchingMessageHandler', function() {
       let i = 0;
       const handleMessage = () => {
         i++;
-        return {response: 'yay'};
+        return {message: 'yay'};
       };
       const matcher = createMatcher({match: 'foo', handleMessage});
       return Promise.mapSeries([
-        () => expect(matcher.handleMessage('foo')).to.become({response: 'yay'}),
+        () => expect(matcher.handleMessage('foo')).to.become({message: 'yay'}),
         () => expect(matcher.handleMessage('bar')).to.become(false),
         () => expect(i).to.equal(1),
       ], f => f());
     });
 
     it('should support string matching / should trim leading space from the remainder', function() {
-      const handleMessage = (remainder, arg) => ({response: `${remainder} ${arg}`});
+      const handleMessage = (remainder, arg) => ({message: `${remainder} ${arg}`});
       const matcher = createMatcher({match: 'foo', handleMessage});
       return Promise.all([
-        expect(matcher.handleMessage('foo bar', 1)).to.become({response: 'bar 1'}),
-        expect(matcher.handleMessage('foo    bar', 1)).to.become({response: 'bar 1'}),
+        expect(matcher.handleMessage('foo bar', 1)).to.become({message: 'bar 1'}),
+        expect(matcher.handleMessage('foo    bar', 1)).to.become({message: 'bar 1'}),
       ]);
     });
 
@@ -61,11 +61,11 @@ describe('MatchingMessageHandler', function() {
         const [greeting, remainder] = message.split(' ');
         return greeting === 'hello' ? `the ${remainder} is ${arg}` : false;
       };
-      const handleMessage = (remainder, arg) => ({response: `${remainder}, ${arg}`});
+      const handleMessage = (remainder, arg) => ({message: `${remainder}, ${arg}`});
       const matcher = createMatcher({match, handleMessage});
       return Promise.all([
-        expect(matcher.handleMessage('hello world', 'me')).to.become({response: 'the world is me, me'}),
-        expect(matcher.handleMessage('hello universe', 'me')).to.become({response: 'the universe is me, me'}),
+        expect(matcher.handleMessage('hello world', 'me')).to.become({message: 'the world is me, me'}),
+        expect(matcher.handleMessage('hello universe', 'me')).to.become({message: 'the universe is me, me'}),
         expect(matcher.handleMessage('goodbye world', 'me')).to.become(false),
         expect(matcher.handleMessage('goodbye universe', 'me')).to.become(false),
       ]);
