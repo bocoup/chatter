@@ -11,3 +11,4 @@ export {ConversingMessageHandler, default as createConversation} from './message
 // Util
 export {handleMessage} from './util/message-handler';
 export {parseArgs} from './util/args-parser';
+export {isMessage, normalizeMessage} from './util/response';

@@ -22,7 +22,8 @@
   "homepage": "https://github.com/bocoup/bot-framework#readme",
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.7.5",
-    "bluebird": "^3.3.5"
+    "bluebird": "^3.3.5",
+    "ramda": "^0.21.0"
   },
   "devDependencies": {
     "babel-cli": "^6.8.0",

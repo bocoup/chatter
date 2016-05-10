@@ -17,6 +17,8 @@ describe('API', function() {
 
     expect(api.handleMessage).to.be.a('function');
     expect(api.parseArgs).to.be.a('function');
+    expect(api.isMessage).to.be.a('function');
+    expect(api.normalizeMessage).to.be.a('function');
   });
 
 });
