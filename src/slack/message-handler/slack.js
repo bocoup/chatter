@@ -1,6 +1,6 @@
 import {DelegatingMessageHandler} from '../../message-handler/delegate';
 
-export class MessageHandler extends DelegatingMessageHandler {
+export class SlackMessageHandler extends DelegatingMessageHandler {
 
   constructor(slack, options = {dm: false, channel: false}, children) {
     super(options, children);
@@ -9,13 +9,17 @@ export class MessageHandler extends DelegatingMessageHandler {
     this.channel = options.channel;
   }
 
+  // Test the given channel for validity, based on the specified options.
+  isValidChannel(channel) {
+    return (this.dm === true && channel.is_im) || (this.channel === true && !channel.is_im);
+  }
+
   // Parse arguments and options from message and pass the resulting object
   // into the specified handleMessage function.
   handleMessage(message) {
     const channel = this.slack.getChannelGroupOrDMByID(message.channel);
-    const isValidChannel = (this.dm === true && channel.is_im) || (this.channel === true && !channel.is_im);
     // Ignore non-message messages.
-    if (!isValidChannel || message.type !== 'message') {
+    if (!this.isValidChannel(channel) || message.type !== 'message') {
       return false;
     }
     // If the message was a "changed" message, get the underlying message.
@@ -32,6 +36,6 @@ export class MessageHandler extends DelegatingMessageHandler {
 
 }
 
-export default function createMessageHandler(...args) {
-  return new MessageHandler(...args);
+export default function createSlackMessageHandler(...args) {
+  return new SlackMessageHandler(...args);
 }
