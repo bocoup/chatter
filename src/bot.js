@@ -7,7 +7,7 @@ export class Bot {
 
   getConversation(id) {
     if (!this.conversations[id]) {
-      this.conversations[id] = this.createConversation();
+      this.conversations[id] = this.createConversation(id);
     }
     return this.conversations[id];
   }

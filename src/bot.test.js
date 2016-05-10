@@ -15,15 +15,15 @@ describe('Bot', function() {
 
     it('should cache and retrieve conversations by id', function() {
       let i = 0;
-      const createConversation = () => ({i: i++});
+      const createConversation = id => ({i: i++, id});
       const bot = createBot({createConversation});
-      expect(bot.getConversation('a')).to.deep.equal({i: 0});
-      expect(bot.getConversation('a')).to.deep.equal({i: 0});
-      expect(bot.getConversation('b')).to.deep.equal({i: 1});
-      expect(bot.getConversation('c')).to.deep.equal({i: 2});
-      expect(bot.getConversation('b')).to.deep.equal({i: 1});
-      expect(bot.getConversation('a')).to.deep.equal({i: 0});
-      expect(bot.getConversation('c')).to.deep.equal({i: 2});
+      expect(bot.getConversation('a')).to.deep.equal({i: 0, id: 'a'});
+      expect(bot.getConversation('a')).to.deep.equal({i: 0, id: 'a'});
+      expect(bot.getConversation('b')).to.deep.equal({i: 1, id: 'b'});
+      expect(bot.getConversation('c')).to.deep.equal({i: 2, id: 'c'});
+      expect(bot.getConversation('b')).to.deep.equal({i: 1, id: 'b'});
+      expect(bot.getConversation('a')).to.deep.equal({i: 0, id: 'a'});
+      expect(bot.getConversation('c')).to.deep.equal({i: 2, id: 'c'});
     });
 
   });
