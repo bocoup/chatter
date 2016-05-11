@@ -1,23 +1,30 @@
 import {handleMessage, isMessageHandlerOrHandlers} from '../util/message-handler';
 
+// Validate these signatures.
+// Only options:
+//   getHandlers({handleMessage: fn, ...})
+// Only children:
+//   getHandlers(fn)
+//   getHandlers({handleMessage: fn})
+//   getHandlers([...])
+// Both options and children:
+//   getHandlers({...}, fn)
+//   getHandlers({...}, {handleMessage: fn})
+//   getHandlers({...}, [...])
+export function getHandlers(options = {}, handlers) {
+  if (!handlers) {
+    handlers = options.handleMessage || options;
+  }
+  if (!isMessageHandlerOrHandlers(handlers)) {
+    throw new TypeError('Missing required message handler(s).');
+  }
+  return handlers;
+}
+
 export class DelegatingMessageHandler {
 
-  constructor(options = {}, children) {
-    // Validate these signatures.
-    // Only options:
-    //   createDelegate({handleMessage: fn, ...})
-    // Only children:
-    //   createDelegate(fn)
-    //   createDelegate({handleMessage: fn})
-    //   createDelegate([...])
-    // Both options and children:
-    //   createDelegate({...}, fn)
-    //   createDelegate({...}, {handleMessage: fn})
-    //   createDelegate({...}, [...])
-    this.children = children || options.handleMessage || options;
-    if (!isMessageHandlerOrHandlers(this.children)) {
-      throw new TypeError('Missing required message handlers.');
-    }
+  constructor(options, children) {
+    this.children = getHandlers(options, children);
   }
 
   // Iterate over all child handlers, yielding the first non-false result.

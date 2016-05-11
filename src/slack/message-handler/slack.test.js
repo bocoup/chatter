@@ -19,8 +19,8 @@ describe('SlackMessageHandler', function() {
 
     it('should behave like DelegatingMessageHandler', function() {
       expect(() => createSlackMessageHandler(slack, nop)).to.not.throw();
-      expect(() => createSlackMessageHandler(slack)).to.throw(/missing.*message.*handlers/i);
-      expect(() => createSlackMessageHandler()).to.throw(/missing.*message.*handlers/i);
+      expect(() => createSlackMessageHandler(slack)).to.throw(/missing.*message.*handler/i);
+      expect(() => createSlackMessageHandler()).to.throw(/missing.*message.*handler/i);
     });
 
     it('should throw if no slack option was specified', function() {

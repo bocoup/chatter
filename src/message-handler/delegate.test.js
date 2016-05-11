@@ -1,4 +1,4 @@
-import createDelegate, {DelegatingMessageHandler} from './delegate';
+import createDelegate, {DelegatingMessageHandler, getHandlers} from './delegate';
 
 const nop = () => {};
 
@@ -6,7 +6,44 @@ describe('DelegatingMessageHandler', function() {
 
   describe('API', function() {
 
-    it('createDelegate should return an instance of DelegatingMessageHandler', function() {
+    it('should export the proper API', function() {
+      expect(createDelegate).to.be.a('function');
+      expect(DelegatingMessageHandler).to.be.a('function');
+      expect(getHandlers).to.be.a('function');
+    });
+
+  });
+
+  describe('getHandlers', function() {
+
+    it('should throw if no/invalid message handlers were specified', function() {
+      // Valid
+      expect(getHandlers({handleMessage: nop, other: true})).to.deep.equal(nop);
+      expect(getHandlers(nop)).to.deep.equal(nop);
+      expect(getHandlers({handleMessage: nop})).to.deep.equal(nop);
+      expect(getHandlers([])).to.deep.equal([]);
+      expect(getHandlers([nop])).to.deep.equal([nop]);
+      expect(getHandlers([{handleMessage: nop}])).to.deep.equal([{handleMessage: nop}]);
+      expect(getHandlers({}, nop)).to.deep.equal(nop);
+      expect(getHandlers({}, {handleMessage: nop})).to.deep.equal({handleMessage: nop});
+      expect(getHandlers({}, [])).to.deep.equal([]);
+      expect(getHandlers({}, [nop])).to.deep.equal([nop]);
+      expect(getHandlers({}, [{handleMessage: nop}])).to.deep.equal([{handleMessage: nop}]);
+      // Invalid
+      expect(() => getHandlers()).to.throw(/missing.*message.*handler/i);
+      expect(() => getHandlers(123)).to.throw(/missing.*message.*handler/i);
+      expect(() => getHandlers({})).to.throw(/missing.*message.*handler/i);
+      expect(() => getHandlers([123])).to.throw(/missing.*message.*handler/i);
+      expect(() => getHandlers({}, {handleMessage: 123})).to.throw(/missing.*message.*handler/i);
+      expect(() => getHandlers({}, 123)).to.throw(/missing.*message.*handler/i);
+      expect(() => getHandlers({}, [123])).to.throw(/missing.*message.*handler/i);
+    });
+
+  });
+
+  describe('createDelegate', function() {
+
+    it('should return an instance of DelegatingMessageHandler', function() {
       const delegate = createDelegate(nop);
       expect(delegate).to.be.an.instanceof(DelegatingMessageHandler);
     });
@@ -25,13 +62,13 @@ describe('DelegatingMessageHandler', function() {
       expect(() => createDelegate({}, [nop])).to.not.throw();
       expect(() => createDelegate({}, [{handleMessage: nop}])).to.not.throw();
       // Invalid
-      expect(() => createDelegate()).to.throw(/missing.*message.*handlers/i);
-      expect(() => createDelegate(123)).to.throw(/missing.*message.*handlers/i);
-      expect(() => createDelegate({})).to.throw(/missing.*message.*handlers/i);
-      expect(() => createDelegate([123])).to.throw(/missing.*message.*handlers/i);
-      expect(() => createDelegate({}, {handleMessage: 123})).to.throw(/missing.*message.*handlers/i);
-      expect(() => createDelegate({}, 123)).to.throw(/missing.*message.*handlers/i);
-      expect(() => createDelegate({}, [123])).to.throw(/missing.*message.*handlers/i);
+      expect(() => createDelegate()).to.throw(/missing.*message.*handler/i);
+      expect(() => createDelegate(123)).to.throw(/missing.*message.*handler/i);
+      expect(() => createDelegate({})).to.throw(/missing.*message.*handler/i);
+      expect(() => createDelegate([123])).to.throw(/missing.*message.*handler/i);
+      expect(() => createDelegate({}, {handleMessage: 123})).to.throw(/missing.*message.*handler/i);
+      expect(() => createDelegate({}, 123)).to.throw(/missing.*message.*handler/i);
+      expect(() => createDelegate({}, [123])).to.throw(/missing.*message.*handler/i);
     });
 
   });

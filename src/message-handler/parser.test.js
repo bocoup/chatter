@@ -14,7 +14,7 @@ describe('ParsingMessageHandler', function() {
 
     it('should behave like DelegatingMessageHandler', function() {
       expect(() => createParser(nop)).to.not.throw();
-      expect(() => createParser()).to.throw(/missing.*message.*handlers/i);
+      expect(() => createParser()).to.throw(/missing.*message.*handler/i);
     });
 
   });

@@ -14,7 +14,7 @@ describe('MatchingMessageHandler', function() {
 
     it('should behave like DelegatingMessageHandler', function() {
       expect(() => createMatcher({match: 'foo'}, nop)).to.not.throw();
-      expect(() => createMatcher({match: 'foo'})).to.throw(/missing.*message.*handlers/i);
+      expect(() => createMatcher({match: 'foo'})).to.throw(/missing.*message.*handler/i);
     });
 
     it('should throw if no match option was specified', function() {

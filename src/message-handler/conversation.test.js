@@ -14,7 +14,7 @@ describe('ConversingMessageHandler', function() {
 
     it('should behave like DelegatingMessageHandler', function() {
       expect(() => createConversation(nop)).to.not.throw();
-      expect(() => createConversation()).to.throw(/missing.*message.*handlers/i);
+      expect(() => createConversation()).to.throw(/missing.*message.*handler/i);
     });
 
   });
