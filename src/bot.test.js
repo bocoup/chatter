@@ -1,12 +1,20 @@
 import createBot, {Bot} from './bot';
 
+const nop = () => {};
+
 describe('Bot', function() {
 
   describe('API', function() {
 
     it('createBot should return an instance of Bot', function() {
-      const bot = createBot();
+      const bot = createBot({createMessageHandler: nop});
       expect(bot).to.be.an.instanceof(Bot);
+    });
+
+    it('should throw if no createMessageHandler option was specified', function() {
+      expect(() => createBot()).to.throw(/missing.*createMessageHandler/i);
+      expect(() => createBot({})).to.throw(/missing.*createMessageHandler/i);
+      expect(() => createBot({createMessageHandler: nop})).to.not.throw();
     });
 
   });

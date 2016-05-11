@@ -1,6 +1,9 @@
 export class Bot {
 
   constructor({createMessageHandler} = {}) {
+    if (!createMessageHandler) {
+      throw new TypeError('Missing required "createMessageHandler" option.');
+    }
     this.createMessageHandler = createMessageHandler;
     this.handlerMap = {};
   }
