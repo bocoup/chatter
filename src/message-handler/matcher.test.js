@@ -26,6 +26,59 @@ describe('MatchingMessageHandler', function() {
 
   });
 
+  describe('matchStringOrRegex', function() {
+
+    it('should match entire message', function() {
+      const {matchStringOrRegex} = MatchingMessageHandler.prototype;
+      expect(matchStringOrRegex('foo', 'foo')).to.equal('');
+      expect(matchStringOrRegex('foo', 'foo1')).to.equal(false);
+      expect(matchStringOrRegex('foo', '1foo')).to.equal(false);
+    });
+
+    it('should match words at the beginning of the message', function() {
+      const {matchStringOrRegex} = MatchingMessageHandler.prototype;
+      expect(matchStringOrRegex('foo', 'foo bar')).to.equal('bar');
+      expect(matchStringOrRegex('foo', 'foo bar baz')).to.equal('bar baz');
+      expect(matchStringOrRegex('foo', 'foobar')).to.equal(false);
+      expect(matchStringOrRegex('foo', 'foo-bar')).to.equal(false);
+      expect(matchStringOrRegex('foo', 'foo:bar')).to.equal(false);
+      expect(matchStringOrRegex('foo', 'foo: bar')).to.equal(false);
+      expect(matchStringOrRegex('foo', 'bar foo')).to.equal(false);
+    });
+
+    it('should trim leading spaces from the remainder', function() {
+      const {matchStringOrRegex} = MatchingMessageHandler.prototype;
+      expect(matchStringOrRegex('foo', 'foo    ')).to.equal('');
+      expect(matchStringOrRegex('foo', 'foo    bar')).to.equal('bar');
+      expect(matchStringOrRegex('foo', 'foo    bar   baz')).to.equal('bar   baz');
+    });
+
+    it('should ignore case when matching via string', function() {
+      const {matchStringOrRegex} = MatchingMessageHandler.prototype;
+      expect(matchStringOrRegex('foo', 'FoO')).to.equal('');
+      expect(matchStringOrRegex('foo', 'Foo bar')).to.equal('bar');
+      expect(matchStringOrRegex('foo', 'FOO bar baz')).to.equal('bar baz');
+      expect(matchStringOrRegex('FOO', 'FoO')).to.equal('');
+      expect(matchStringOrRegex('fOO', 'Foo bar')).to.equal('bar');
+      expect(matchStringOrRegex('FoO', 'foo bar baz')).to.equal('bar baz');
+    });
+
+    it('should match via regex', function() {
+      const {matchStringOrRegex} = MatchingMessageHandler.prototype;
+      expect(matchStringOrRegex(/^foo/, 'foo')).to.equal('');
+      expect(matchStringOrRegex(/bar/, 'foo bar baz')).to.equal('');
+    });
+
+    it('should return the first non-empty capture as the remainder when matching via regex', function() {
+      const {matchStringOrRegex} = MatchingMessageHandler.prototype;
+      expect(matchStringOrRegex(/^(foo)/, 'foo')).to.equal('foo');
+      expect(matchStringOrRegex(/(.*)\s+bar(.*)/, 'foo bar baz')).to.equal('foo');
+      expect(matchStringOrRegex(/(?:(f.*)\s+)?bar\s+(.*)/, 'foo bar baz')).to.equal('foo');
+      expect(matchStringOrRegex(/(?:(f.*)\s+)?bar\s+(.*)/, 'goo bar baz')).to.equal('baz');
+    });
+
+  });
+
   describe('handleMessage', function() {
 
     it('should return a promise that gets fulfilled', function() {
@@ -42,7 +95,7 @@ describe('MatchingMessageHandler', function() {
       const matcher = createMatcher({match: 'foo', handleMessage});
       return Promise.mapSeries([
         () => expect(matcher.handleMessage('foo')).to.become({message: 'yay'}),
-        () => expect(matcher.handleMessage('bar')).to.become(false),
+        () => expect(matcher.handleMessage('baz')).to.become(false),
         () => expect(i).to.equal(1),
       ], f => f());
     });
@@ -51,8 +104,10 @@ describe('MatchingMessageHandler', function() {
       const handleMessage = (remainder, arg) => ({message: `${remainder} ${arg}`});
       const matcher = createMatcher({match: 'foo', handleMessage});
       return Promise.all([
+        expect(matcher.handleMessage('foo', 1)).to.become({message: ' 1'}),
         expect(matcher.handleMessage('foo bar', 1)).to.become({message: 'bar 1'}),
         expect(matcher.handleMessage('foo    bar', 1)).to.become({message: 'bar 1'}),
+        expect(matcher.handleMessage('foo-bar', 1)).to.become(false),
       ]);
     });
 

@@ -30,21 +30,25 @@ export class MatchingMessageHandler extends DelegatingMessageHandler {
       return match(message, ...args);
     }
     else if (typeof match === 'string') {
-      return this.matchString(match, message);
+      return this.matchStringOrRegex(match, message);
     }
     throw new TypeError('Invalid "match" option format.');
   }
 
-  // If the "match" string matches the beginning of the message, success!
-  // Return the remainder of the message, with leading spaces removed, otherwise
-  // return false.
-  matchString(match, message = '') {
-    const isMatch = message.indexOf(match) === 0;
+  // If "match" is a String and matches the entire message or matches a space-
+  // delimited word at the beginning of the message, success. If any text
+  // remains after the match, return it (with leading spaces stripped) as the
+  // remainder.
+  //
+  // If match is a RegExp and matches the message, return the value of the
+  // first truthy capture group.
+  matchStringOrRegex(match, message = '') {
+    const re = typeof match === 'string' ? new RegExp(`^${match}(?:$|\\s+(.*))`, 'i') : match;
+    const [isMatch, ...captures] = message.match(re) || [];
     if (!isMatch) {
       return false;
     }
-    const remainder = message.slice(match.length).replace(/^\s+/, '');
-    return remainder;
+    return captures.find(Boolean) || '';
   }
 
 }
