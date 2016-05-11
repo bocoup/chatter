@@ -2,7 +2,12 @@
 
 import {isMessage, normalizeMessage} from './response';
 
-describe('response', function() {
+describe('util/response', function() {
+
+  it('should export the proper API', function() {
+    expect(isMessage).to.be.a('function');
+    expect(normalizeMessage).to.be.a('function');
+  });
 
   describe('isMessage', function() {
 

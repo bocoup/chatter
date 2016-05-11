@@ -1,6 +1,6 @@
 import * as api from './index';
 
-describe('API', function() {
+describe('npm module', function() {
 
   it('should export the proper API', function() {
     expect(api.Bot).to.be.a('function');

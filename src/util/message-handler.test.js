@@ -3,7 +3,13 @@
 import Promise from 'bluebird';
 import {callMessageHandler, isMessageHandlerOrHandlers, handleMessage} from './message-handler';
 
-describe('message-handler', function() {
+describe('util/message-handler', function() {
+
+  it('should export the proper API', function() {
+    expect(callMessageHandler).to.be.a('function');
+    expect(isMessageHandlerOrHandlers).to.be.a('function');
+    expect(handleMessage).to.be.a('function');
+  });
 
   describe('callMessageHandler', function() {
 

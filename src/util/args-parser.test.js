@@ -1,6 +1,10 @@
 import {parseArgs} from './args-parser';
 
-describe('args-parser', function() {
+describe('util/args-parser', function() {
+
+  it('should export the proper API', function() {
+    expect(parseArgs).to.be.a('function');
+  });
 
   describe('parseArgs', function() {
 
