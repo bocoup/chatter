@@ -6,6 +6,7 @@ export class ConversingMessageHandler extends DelegatingMessageHandler {
   constructor(options = {}, children) {
     super(options, children);
     this.dialog = null;
+    this.hasState = true;
   }
 
   // If a child handler yields an object with a "dialog" property, that

@@ -1,15 +1,19 @@
 export class Bot {
 
-  constructor({createConversation} = {}) {
-    this.createConversation = createConversation;
-    this.conversations = {};
+  constructor({createMessageHandler} = {}) {
+    this.createMessageHandler = createMessageHandler;
+    this.handlerMap = {};
   }
 
-  getConversation(id) {
-    if (!this.conversations[id]) {
-      this.conversations[id] = this.createConversation(id);
+  getMessageHandler(id) {
+    if (this.handlerMap[id]) {
+      return this.handlerMap[id];
     }
-    return this.conversations[id];
+    const messageHandler = this.createMessageHandler(id);
+    if (messageHandler.hasState) {
+      this.handlerMap[id] = messageHandler;
+    }
+    return messageHandler;
   }
 
 }

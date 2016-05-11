@@ -19,6 +19,15 @@ describe('ConversingMessageHandler', function() {
 
   });
 
+  describe('hasState', function() {
+
+    it('should indicate that is has state (for things that care, like Bot)', function() {
+      const conversation = createConversation(nop);
+      expect(conversation.hasState).to.equal(true);
+    });
+
+  });
+
   describe('handleMessage', function() {
 
     beforeEach(function() {
