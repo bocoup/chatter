@@ -1,9 +1,13 @@
+import Promise from 'bluebird';
 import {DelegatingMessageHandler} from '../../message-handler/delegate';
 
 export class SlackMessageHandler extends DelegatingMessageHandler {
 
   constructor(slack, options = {dm: false, channel: false}, children) {
     super(options, children);
+    if (!slack || !('getChannelGroupOrDMByID' in slack)) {
+      throw new TypeError('Missing required "slack" argument.');
+    }
     this.slack = slack;
     this.dm = options.dm;
     this.channel = options.channel;
@@ -20,7 +24,7 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
     const channel = this.slack.getChannelGroupOrDMByID(message.channel);
     // Ignore non-message messages.
     if (!this.isValidChannel(channel) || message.type !== 'message') {
-      return false;
+      return Promise.resolve(false);
     }
     // If the message was a "changed" message, get the underlying message.
     if (message.subtype === 'message_changed') {
@@ -28,7 +32,7 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
     }
     // Any message with a subtype or attachments can be safely ignored.
     if (message.subtype || message.attachments) {
-      return false;
+      return Promise.resolve(false);
     }
     const user = this.slack.getUserByID(message.user);
     return super.handleMessage(message.text, {channel, user});
