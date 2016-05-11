@@ -1,6 +1,22 @@
 import Promise from 'bluebird';
 import {DelegatingMessageHandler} from './delegate';
 
+// If "match" is a String and matches the entire message or matches a space-
+// delimited word at the beginning of the message, success. If any text
+// remains after the match, return it (with leading spaces stripped) as the
+// remainder.
+//
+// If match is a RegExp and matches the message, return the value of the
+// first truthy capture group.
+export function matchStringOrRegex(match, message = '') {
+  const re = typeof match === 'string' ? new RegExp(`^${match}(?:$|\\s+(.*))`, 'i') : match;
+  const [isMatch, ...captures] = message.match(re) || [];
+  if (!isMatch) {
+    return false;
+  }
+  return captures.find(Boolean) || '';
+}
+
 export class MatchingMessageHandler extends DelegatingMessageHandler {
 
   constructor(options = {}, children) {
@@ -30,25 +46,9 @@ export class MatchingMessageHandler extends DelegatingMessageHandler {
       return match(message, ...args);
     }
     else if (typeof match === 'string') {
-      return this.matchStringOrRegex(match, message);
+      return matchStringOrRegex(match, message);
     }
     throw new TypeError('Invalid "match" option format.');
-  }
-
-  // If "match" is a String and matches the entire message or matches a space-
-  // delimited word at the beginning of the message, success. If any text
-  // remains after the match, return it (with leading spaces stripped) as the
-  // remainder.
-  //
-  // If match is a RegExp and matches the message, return the value of the
-  // first truthy capture group.
-  matchStringOrRegex(match, message = '') {
-    const re = typeof match === 'string' ? new RegExp(`^${match}(?:$|\\s+(.*))`, 'i') : match;
-    const [isMatch, ...captures] = message.match(re) || [];
-    if (!isMatch) {
-      return false;
-    }
-    return captures.find(Boolean) || '';
   }
 
 }
