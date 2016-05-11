@@ -37,3 +37,24 @@ export class DelegatingMessageHandler {
 export default function createDelegate(...args) {
   return new DelegatingMessageHandler(...args);
 }
+
+// Compose creators that accept a signature like getHandlers() into a single
+// creator. All creators receive the same options object.
+// Eg:
+//   const createMatcherParser = composeCreators(createMatcher, createParser);
+//   const fooHandler = createMatcherParser({match: 'foo', parseOptions: {}}, fn);
+// Is equivalent to:
+//   const fooHandler = createMatcher({match: 'foo'}, createParser({parseOptions: {}}, fn));
+export function composeCreators(...creators) {
+  if (Array.isArray(creators[0])) {
+    creators = creators[0];
+  }
+  return function composed(options, children) {
+    children = getHandlers(options, children);
+    function recurse([currentHandler, ...remain]) {
+      const nextHandler = remain.length > 0 ? recurse(remain) : createDelegate(children);
+      return currentHandler(options, nextHandler);
+    }
+    return recurse(creators);
+  };
+}
