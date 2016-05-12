@@ -17,7 +17,8 @@ export class SlackBot extends Bot {
   }
 
   createSlackMessageHandler(...args) {
-    return createSlackMessageHandler(this.slack, ...args);
+    return createSlackMessageHandler(this, ...args);
+  }
   }
 
   bindEventHandlers(events) {

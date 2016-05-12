@@ -3,12 +3,12 @@ import {DelegatingMessageHandler} from '../../message-handler/delegate';
 
 export class SlackMessageHandler extends DelegatingMessageHandler {
 
-  constructor(slack, options = {dm: false, channel: false}, children) {
+  constructor(bot, options = {dm: false, channel: false}, children) {
     super(options, children);
-    if (!slack || !('getChannelGroupOrDMByID' in slack)) {
-      throw new TypeError('Missing required "slack" argument.');
+    if (!bot || !bot.slack) {
+      throw new TypeError('Missing required "bot" argument.');
     }
-    this.slack = slack;
+    this.bot = bot;
     this.dm = options.dm;
     this.channel = options.channel;
   }
@@ -21,7 +21,9 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
   // Parse arguments and options from message and pass the resulting object
   // into the specified handleMessage function.
   handleMessage(message) {
-    const channel = this.slack.getChannelGroupOrDMByID(message.channel);
+    const {bot} = this;
+    const {slack} = this.bot;
+    const channel = slack.getChannelGroupOrDMByID(message.channel);
     // Ignore non-message messages.
     if (!this.isValidChannel(channel) || message.type !== 'message') {
       return Promise.resolve(false);
@@ -34,8 +36,14 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
     if (message.subtype || message.attachments) {
       return Promise.resolve(false);
     }
-    const user = this.slack.getUserByID(message.user);
-    return super.handleMessage(message.text, {channel, user});
+    const user = slack.getUserByID(message.user);
+    const meta = {
+      bot,
+      slack,
+      channel,
+      user,
+    };
+    return super.handleMessage(message.text, meta);
   }
 
 }
