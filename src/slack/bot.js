@@ -2,6 +2,7 @@ import Promise from 'bluebird';
 import {Bot} from '../bot';
 import {isMessage, normalizeMessage} from '../util/response';
 import createSlackMessageHandler from './message-handler/slack';
+import {parseMessage} from './util/message-parser';
 
 export class SlackBot extends Bot {
   constructor(options = {}) {
@@ -19,6 +20,9 @@ export class SlackBot extends Bot {
   createSlackMessageHandler(...args) {
     return createSlackMessageHandler(this, ...args);
   }
+
+  parseMessage(...args) {
+    return parseMessage(this.slack, ...args);
   }
 
   bindEventHandlers(events) {
