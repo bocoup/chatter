@@ -44,15 +44,29 @@ describe('message-handler/matcher', function() {
     });
 
     it('should match via regex', function() {
+      expect(matchStringOrRegex(/^/, 'foo')).to.equal('');
       expect(matchStringOrRegex(/^foo/, 'foo')).to.equal('');
       expect(matchStringOrRegex(/bar/, 'foo bar baz')).to.equal('');
     });
 
-    it('should return the first non-empty capture as the remainder when matching via regex', function() {
-      expect(matchStringOrRegex(/^(foo)/, 'foo')).to.equal('foo');
-      expect(matchStringOrRegex(/(.*)\s+bar(.*)/, 'foo bar baz')).to.equal('foo');
-      expect(matchStringOrRegex(/(?:(f.*)\s+)?bar\s+(.*)/, 'foo bar baz')).to.equal('foo');
-      expect(matchStringOrRegex(/(?:(f.*)\s+)?bar\s+(.*)/, 'goo bar baz')).to.equal('baz');
+    it('should return the first captured capture group as the remainder when matching via regex', function() {
+      let re = /^(?:foo|bar)/;
+      expect(matchStringOrRegex(re, 'foo')).to.equal('');
+      expect(matchStringOrRegex(re, 'bar baz')).to.equal('');
+      re = /^(foo|bar)/;
+      expect(matchStringOrRegex(re, 'foo')).to.equal('foo');
+      expect(matchStringOrRegex(re, 'bar baz')).to.equal('bar');
+      re = /^(?:foo-(\S+)|bar=(\S+)|(.*))/;
+      expect(matchStringOrRegex(re, 'foo-123 bar')).to.equal('123');
+      expect(matchStringOrRegex(re, 'bar=456 qux')).to.equal('456');
+      expect(matchStringOrRegex(re, 'xyz abc')).to.equal('xyz abc');
+      re = /(.*)\s+bar(.*)/;
+      expect(matchStringOrRegex(re, 'foo bar baz')).to.equal('foo');
+      re = /(?:(f.*)\s+)?bar\s+(.*)/;
+      expect(matchStringOrRegex(re, 'foo bar baz')).to.equal('foo');
+      expect(matchStringOrRegex(re, 'goo bar baz')).to.equal('baz');
+      re = /(^)(foo)/;
+      expect(matchStringOrRegex(re, 'foo')).to.equal('');
     });
 
   });

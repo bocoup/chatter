@@ -7,14 +7,14 @@ import {DelegatingMessageHandler} from './delegate';
 // remainder.
 //
 // If match is a RegExp and matches the message, return the value of the
-// first truthy capture group.
+// first non-undefined (ie. captured) capture group.
 export function matchStringOrRegex(match, message = '') {
   const re = typeof match === 'string' ? new RegExp(`^${match}(?:$|\\s+(.*))`, 'i') : match;
-  const [isMatch, ...captures] = message.match(re) || [];
-  if (!isMatch) {
+  const [fullMatch, ...captures] = message.match(re) || [];
+  if (typeof fullMatch !== 'string') {
     return false;
   }
-  return captures.find(Boolean) || '';
+  return captures.find(c => typeof c === 'string') || '';
 }
 
 export class MatchingMessageHandler extends DelegatingMessageHandler {
