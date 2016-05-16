@@ -7,6 +7,7 @@ export {DelegatingMessageHandler, default as createDelegate} from './message-han
 export {MatchingMessageHandler, default as createMatcher} from './message-handler/matcher';
 export {ParsingMessageHandler, default as createParser} from './message-handler/parser';
 export {ConversingMessageHandler, default as createConversation} from './message-handler/conversation';
+export {CommandMessageHandler, default as createCommand} from './message-handler/command';
 
 // Util
 export {handleMessage} from './util/message-handler';
