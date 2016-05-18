@@ -6,41 +6,37 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
 
   constructor(options = {}, children) {
     super(options, children);
-    const {name, usage, description} = options;
+    const {name, usage, description, details} = options;
     this.isCommand = true;
     this.name = name;
     this.usage = usage;
     this.description = description;
-    // Ansuer children is an array.
+    this.details = details;
+    // Ensure children is an array.
     if (!Array.isArray(this.children)) {
       this.children = [this.children];
     }
-    // Keep track of the originally-specified array of children for later.
-    this.origChildren = this.children;
-    // If this command has a name, create a matcher-wrapper around the children
-    // that responds only to that name.
-    if (name) {
-      this.children = createMatcher({match: name}, this.children);
-    }
-    // Otherwise, this is the "top-level" command. Add a help command and a
-    // fallback handler for usage information.
-    else {
+    // If this command has no name, it's the "top-level" command. Add a help
+    // command and a fallback handler for usage information.
+    if (!name) {
       this.children = [
         ...this.children,
         this.createHelpCommand(),
         this.createFallbackHandler(),
       ];
     }
-  }
-
-  // Get all originally-specified children that are command handlers.
-  getSubCommands() {
-    return this.origChildren.filter(c => c.isCommand);
+    // Keep track of this command's sub-commands for later use.
+    this.subCommands = this.children.filter(c => c.isCommand);
+    // If this command has a name, create a matching wrapper around children
+    // that responds only to this command's name.
+    if (name) {
+      this.children = createMatcher({match: name}, this.children);
+    }
   }
 
   // Does this command have sub-commands?
   hasSubCommands() {
-    return this.getSubCommands().length > 0;
+    return this.subCommands.length > 0;
   }
 
   // Search for a matching sub-command. IF an exact match isn't found, return
@@ -53,7 +49,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
     if (search) {
       const parts = search.split(/\s+/);
       for (let i = 0; i < parts.length; i++) {
-        const subCommand = command.getSubCommands().find(c => c.name && c.name === parts[i]);
+        const subCommand = command.subCommands.find(c => c.name && c.name === parts[i]);
         if (!subCommand) {
           exact = false;
           break;
@@ -88,14 +84,14 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
 
   // Get help info for this command, given the specified arguments.
   helpInfo(search, fullCommandName, exact) {
-    const subCommands = this.getSubCommands();
     const helpText = fullCommandName ? `help for *${fullCommandName}*` : 'general help';
     return [
       !exact && `_Unknown command *${search}*, showing ${helpText}._`,
       this.description,
       this.getUsage(fullCommandName),
-      subCommands.length > 0 && '*Commands:*',
-      subCommands.map(c => `> *${c.name}* - ${c.description}`),
+      this.hasSubCommands() && '*Commands:*',
+      this.subCommands.map(c => `> *${c.name}* - ${c.description}`),
+      this.details,
     ];
   }
 
@@ -105,6 +101,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
     return createCommand({ // eslint-disable-line no-use-before-define
       name: 'help',
       description: 'Get help for the specified command.',
+      usage: '<command>',
       handleMessage: createParser(({remain}) => {
         const search = remain.join(' ');
         const {command, fullCommandName, exact} = this.getMatchingSubCommand(search);
