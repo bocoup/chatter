@@ -6,11 +6,11 @@
 export function parseMessage(slack, message = '') {
   const handlers = {
     '#': id => {
-      const {name} = slack.getChannelByID(id) || {};
+      const {name} = slack.rtmClient.dataStore.getChannelById(id) || {};
       return name && `#${name}`;
     },
     '@': id => {
-      const {name} = slack.getUserByID(id) || {};
+      const {name} = slack.rtmClient.dataStore.getUserById(id) || {};
       return name && `@${name}`;
     },
   };

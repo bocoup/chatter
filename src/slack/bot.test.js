@@ -3,7 +3,11 @@ import createSlackBot, {SlackBot} from './bot';
 const nop = () => {};
 
 const slack = {
-  on: nop,
+  rtmClient: {
+    on: nop,
+    dataStore: {},
+  },
+  webClient: {},
 };
 
 describe('slack/bot', function() {

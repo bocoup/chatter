@@ -23,7 +23,7 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
   handleMessage(message) {
     const {bot} = this;
     const {slack} = this.bot;
-    const channel = slack.getChannelGroupOrDMByID(message.channel);
+    const channel = slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     // Ignore non-message messages.
     if (!this.isValidChannel(channel) || message.type !== 'message') {
       return Promise.resolve(false);
@@ -36,7 +36,7 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
     if (message.subtype || message.attachments) {
       return Promise.resolve(false);
     }
-    const user = slack.getUserByID(message.user);
+    const user = slack.rtmClient.dataStore.getUserById(message.user);
     const meta = {
       bot,
       slack,

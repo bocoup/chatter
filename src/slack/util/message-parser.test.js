@@ -1,13 +1,17 @@
 import {parseMessage} from './message-parser';
 
 const slack = {
-  getUserByID(id) {
-    const map = ['aaa', 'bbb', 'ccc'];
-    return {name: map[id]};
-  },
-  getChannelByID(id) {
-    const map = ['ddd', 'eee', 'fff'];
-    return {name: map[id]};
+  rtmClient: {
+    dataStore: {
+      getUserById(id) {
+        const map = ['aaa', 'bbb', 'ccc'];
+        return {name: map[id]};
+      },
+      getChannelById(id) {
+        const map = ['ddd', 'eee', 'fff'];
+        return {name: map[id]};
+      },
+    },
   },
 };
 

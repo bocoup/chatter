@@ -11,8 +11,17 @@ export class SlackBot extends Bot {
     if (!slack) {
       throw new TypeError('Missing required "slack" option.');
     }
-    this.slack = slack;
+    else if (!slack.rtmClient) {
+      throw new TypeError('Missing required "slack.rtmClient" option.');
+    }
+    else if (!slack.rtmClient.dataStore) {
+      throw new TypeError('Missing required "slack.rtmClient.dataStore" property.');
+    }
+    else if (!slack.webClient) {
+      throw new TypeError('Missing required "slack.webClient" option.');
+    }
     this.name = name;
+    this.slack = slack;
     this.overrideProperties(options);
     this.bindEventHandlers(['open', 'error', 'message']);
   }
@@ -29,7 +38,7 @@ export class SlackBot extends Bot {
     events.forEach(name => {
       const method = this[`on${name[0].toUpperCase()}${name.slice(1)}`];
       if (method) {
-        this.slack.on(name, method.bind(this));
+        this.slack.rtmClient.on(name, method.bind(this));
       }
     });
   }
@@ -79,7 +88,7 @@ export class SlackBot extends Bot {
   }
 
   login() {
-    this.slack.login();
+    this.slack.rtmClient.start();
     return this;
   }
 
@@ -88,17 +97,17 @@ export class SlackBot extends Bot {
   }
 
   getConversationId(message) {
-    const channel = this.slack.getChannelGroupOrDMByID(message.channel);
+    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     return channel.id;
   }
 
   postMessage(message, response) {
-    const channel = this.slack.getChannelGroupOrDMByID(message.channel);
+    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     const text = isMessage(response) ? normalizeMessage(response) :
       isMessage(response.message) ? normalizeMessage(response.message) :
       null;
     const meta = {message, response, channel};
-    return channel.postMessage(this.postMessageOptions(text, meta));
+    return this.slack.webClient.chat.postMessage(channel.id, text, this.postMessageOptions(text, meta));
   }
 
   postMessageOptions(text) {

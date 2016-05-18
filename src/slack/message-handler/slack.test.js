@@ -5,8 +5,12 @@ const nop = () => {};
 
 const bot = {
   slack: {
-    getChannelGroupOrDMByID: nop,
-    getUserByID: nop,
+    rtmClient: {
+      dataStore: {
+        getChannelGroupOrDMById: nop,
+        getUserById: nop,
+      },
+    },
   },
 };
 
