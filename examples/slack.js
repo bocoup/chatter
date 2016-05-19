@@ -1,5 +1,9 @@
 // Run "npm install" and then test with this command in your shell:
 // SLACK_API_TOKEN=<YOUR_TOKEN_HERE> npm run babel examples/slack.js
+//
+// Note that you'll first need a Slack API token, which you can get by going
+// to your team's settings page and creating a new bot:
+// https://my.slack.com/services/new/bot
 
 import Promise from 'bluebird';
 import {RtmClient, WebClient, MemoryDataStore} from '@slack/client';
@@ -28,7 +32,9 @@ const lolHandler = message => {
   return false;
 };
 
-// A command that echoes user input.
+// A command that says something after a delay. Be careful, though! Even though
+// this command yields false to indicate when it doesn't know how to handle the
+// message, it does so after the delay. If possible, return false immediately!
 const delayCommand = createCommand({
   name: 'delay',
   description: `I'll say something after a delay.`,
@@ -37,7 +43,7 @@ const delayCommand = createCommand({
   return new Promise(resolve => {
     setTimeout(() => {
       resolve(!message ? false : message.toLowerCase() === 'yes' ? 'Awesome!' : 'Bummer!');
-    }, 1000);
+    }, 250);
   });
 });
 
@@ -104,6 +110,7 @@ const bot = createSlackBot({
     rtmClient: new RtmClient(process.env.SLACK_API_TOKEN, {
       dataStore: new MemoryDataStore(),
       autoReconnect: true,
+      logLevel: 'error',
     }),
     webClient: new WebClient(process.env.SLACK_API_TOKEN),
   },
