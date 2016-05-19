@@ -75,15 +75,16 @@ export class SlackBot extends Bot {
     if (this.ignoreMessage(message)) {
       return;
     }
+    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     Promise.try(() => {
-      const id = this.getConversationId(message);
+      const id = this.getConversationId(channel, message);
       return this.getMessageHandler(id).handleMessage(message);
     })
     .then(response => {
-      this.handleResponse(message, response);
+      this.handleResponse(channel, response);
     })
     .catch(error => {
-      this.handleResponseError(message, error);
+      this.handleResponseError(channel, error);
     });
   }
 
@@ -96,21 +97,22 @@ export class SlackBot extends Bot {
     return message.subtype === 'bot_message';
   }
 
-  getConversationId(message) {
-    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
+  getConversationId(channel, message) {
     return channel.id;
   }
 
-  postMessage(message, response) {
-    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
-    const text = isMessage(response) ? normalizeMessage(response) :
-      isMessage(response.message) ? normalizeMessage(response.message) :
+  postMessage(channel, message, options) {
+    const channelId = channel && channel.id;
+    const text = isMessage(message) ? normalizeMessage(message) :
+      isMessage(message.message) ? normalizeMessage(message.message) :
       null;
-    const meta = {message, response, channel};
-    return this.slack.webClient.chat.postMessage(channel.id, text, this.postMessageOptions(text, meta));
+    if (!options) {
+      options = this.postMessageOptions(text, {message, channel});
+    }
+    return this.slack.webClient.chat.postMessage(channelId, null, options);
   }
 
-  postMessageOptions(text) {
+  postMessageOptions(text, meta) {
     return {
       username: this.name,
       text,
@@ -119,16 +121,16 @@ export class SlackBot extends Bot {
     };
   }
 
-  handleResponse(message, response) {
+  handleResponse(channel, response) {
     if (response === false) {
       return;
     }
-    this.postMessage(message, response);
+    this.postMessage(channel, response);
   }
 
-  handleResponseError(message, error) {
+  handleResponseError(channel, error) {
     console.error(error.stack);
-    this.postMessage(message, `An error occurred: \`${error.message}\``);
+    this.postMessage(channel, `An error occurred: \`${error.message}\``);
   }
 
 }
