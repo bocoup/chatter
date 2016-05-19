@@ -1,3 +1,5 @@
+import {handleMessage} from './util/message-handler';
+
 export class Bot {
 
   constructor({createMessageHandler} = {}) {
@@ -17,6 +19,10 @@ export class Bot {
       this.handlerMap[id] = messageHandler;
     }
     return messageHandler;
+  }
+
+  handleMessage(...args) {
+    return handleMessage(...args);
   }
 
 }

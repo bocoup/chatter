@@ -78,7 +78,8 @@ export class SlackBot extends Bot {
     const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     Promise.try(() => {
       const id = this.getConversationId(channel, message);
-      return this.getMessageHandler(id).handleMessage(message);
+      const messageHandler = this.getMessageHandler(id);
+      return this.handleMessage(messageHandler, message);
     })
     .then(response => {
       this.handleResponse(channel, response);

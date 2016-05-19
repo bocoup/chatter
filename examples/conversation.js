@@ -148,7 +148,7 @@ function simulate(username, message) {
   const messageHandler = myBot.getMessageHandler(username);
   // Handle the current message and await a result. Any additional arguments
   // passed after message will be passed into all message handler functions.
-  const responsePromise = messageHandler.handleMessage(message, username);
+  const responsePromise = myBot.handleMessage(messageHandler, message, username);
   // Handle result.
   return responsePromise
     .then(response => {
