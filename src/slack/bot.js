@@ -79,7 +79,7 @@ export class SlackBot extends Bot {
     Promise.try(() => {
       const id = this.getConversationId(channel, message);
       const messageHandler = this.getMessageHandler(id);
-      return this.handleMessage(messageHandler, message);
+      return this.processMessage(messageHandler, message);
     })
     .then(response => {
       this.handleResponse(channel, response);

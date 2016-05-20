@@ -1,4 +1,4 @@
-import {handleMessage} from '../util/message-handler';
+import {processMessage} from '../util/process-message';
 import {DelegatingMessageHandler} from './delegate';
 
 export class ConversingMessageHandler extends DelegatingMessageHandler {
@@ -17,7 +17,7 @@ export class ConversingMessageHandler extends DelegatingMessageHandler {
   // stored, child handlers will be called. A copy of the object yielded by the
   // child handler / dialog (minus the dialog property) will be yielded.
   handleMessage(message, ...args) {
-    return handleMessage(this.dialog || this.children, message, ...args)
+    return processMessage(this.dialog || this.children, message, ...args)
       .finally(() => this.clearDialog())
       .then(data => {
         if (data && data.dialog) {

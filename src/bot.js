@@ -1,4 +1,4 @@
-import {handleMessage} from './util/message-handler';
+import {processMessage} from './util/process-message';
 
 export class Bot {
 
@@ -21,8 +21,8 @@ export class Bot {
     return messageHandler;
   }
 
-  handleMessage(...args) {
-    return handleMessage(...args);
+  processMessage(...args) {
+    return processMessage(...args);
   }
 
 }

@@ -1,4 +1,4 @@
-import {handleMessage, isMessageHandlerOrHandlers} from '../util/message-handler';
+import {processMessage, isMessageHandlerOrHandlers} from '../util/process-message';
 
 // Validate these signatures.
 // Only options:
@@ -29,7 +29,7 @@ export class DelegatingMessageHandler {
 
   // Iterate over all child handlers, yielding the first non-false result.
   handleMessage(message, ...args) {
-    return handleMessage(this.children, message, ...args);
+    return processMessage(this.children, message, ...args);
   }
 
 }

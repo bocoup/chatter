@@ -15,7 +15,7 @@ describe('npm module', function() {
     expect(api.ConversingMessageHandler).to.be.a('function');
     expect(api.createConversation).to.be.a('function');
 
-    expect(api.handleMessage).to.be.a('function');
+    expect(api.processMessage).to.be.a('function');
     expect(api.parseArgs).to.be.a('function');
     expect(api.isMessage).to.be.a('function');
     expect(api.normalizeMessage).to.be.a('function');

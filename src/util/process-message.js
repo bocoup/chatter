@@ -35,7 +35,7 @@ export function isMessageHandlerOrHandlers(val) {
 //
 // If iteration completes and no non-false value was returned/yielded, yield
 // false.
-export function handleMessage(handlers, ...args) {
+export function processMessage(handlers, ...args) {
   if (!Array.isArray(handlers)) {
     return Promise.try(() => callMessageHandler(handlers, ...args));
   }
@@ -43,7 +43,7 @@ export function handleMessage(handlers, ...args) {
   let i = 0;
   const next = f => Promise.try(f).then(result => {
     if (isMessageHandlerOrHandlers(result)) {
-      return next(() => handleMessage(result, ...args));
+      return next(() => processMessage(result, ...args));
     }
     else if (result !== false) {
       return result;
@@ -51,7 +51,7 @@ export function handleMessage(handlers, ...args) {
     else if (i === length) {
       return false;
     }
-    return next(() => handleMessage(handlers[i++], ...args));
+    return next(() => processMessage(handlers[i++], ...args));
   });
   return next(() => false);
 }

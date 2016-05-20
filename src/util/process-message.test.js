@@ -1,14 +1,14 @@
 /* eslint object-shorthand: 0 */
 
 import Promise from 'bluebird';
-import {callMessageHandler, isMessageHandlerOrHandlers, handleMessage} from './message-handler';
+import {callMessageHandler, isMessageHandlerOrHandlers, processMessage} from './process-message';
 
-describe('util/message-handler', function() {
+describe('util/process-message', function() {
 
   it('should export the proper API', function() {
     expect(callMessageHandler).to.be.a('function');
     expect(isMessageHandlerOrHandlers).to.be.a('function');
-    expect(handleMessage).to.be.a('function');
+    expect(processMessage).to.be.a('function');
   });
 
   describe('callMessageHandler', function() {
@@ -54,7 +54,7 @@ describe('util/message-handler', function() {
       expect(isMessageHandlerOrHandlers({})).to.equal(false);
     });
 
-    it('should return true for arrays comprised only of message handler functions of objects', function() {
+    it('should return true for arrays comprised only of message handler functions or objects', function() {
       const f = () => {};
       const o = {handleMessage() {}};
       expect(isMessageHandlerOrHandlers([])).to.equal(true);
@@ -66,32 +66,32 @@ describe('util/message-handler', function() {
 
   });
 
-  describe('handleMessage', function() {
+  describe('processMessage', function() {
 
     it('should throw if handlers are invalid', function() {
       const f = () => { return false; };
       const o = {handleMessage: f};
       return Promise.all([
-        expect(handleMessage()).to.be.rejectedWith(/message handler/i),
-        expect(handleMessage(null)).to.be.rejectedWith(/message handler/i),
-        expect(handleMessage([null])).to.be.rejectedWith(/message handler/i),
-        expect(handleMessage([null, f, o, [o, f]])).to.be.rejectedWith(/message handler/i),
-        expect(handleMessage([f, o, [o, null, f]])).to.be.rejectedWith(/message handler/i),
-        expect(handleMessage([])).to.be.fulfilled(),
-        expect(handleMessage(f)).to.be.fulfilled(),
-        expect(handleMessage(o)).to.be.fulfilled(),
-        expect(handleMessage([f, o])).to.be.fulfilled(),
-        expect(handleMessage([f, o, [o, f]])).to.be.fulfilled(),
+        expect(processMessage()).to.be.rejectedWith(/message handler/i),
+        expect(processMessage(null)).to.be.rejectedWith(/message handler/i),
+        expect(processMessage([null])).to.be.rejectedWith(/message handler/i),
+        expect(processMessage([null, f, o, [o, f]])).to.be.rejectedWith(/message handler/i),
+        expect(processMessage([f, o, [o, null, f]])).to.be.rejectedWith(/message handler/i),
+        expect(processMessage([])).to.be.fulfilled(),
+        expect(processMessage(f)).to.be.fulfilled(),
+        expect(processMessage(o)).to.be.fulfilled(),
+        expect(processMessage([f, o])).to.be.fulfilled(),
+        expect(processMessage([f, o, [o, f]])).to.be.fulfilled(),
       ]);
     });
 
     it('should return a promise that gets fulfilled', function() {
-      return expect(handleMessage([])).to.be.fulfilled();
+      return expect(processMessage([])).to.be.fulfilled();
     });
 
     it('should support a single function handler', function() {
       const handler = (message, a, b) => ({message: `${message} ${a} ${b}`});
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
+      return expect(processMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     it('should support a single object handler', function() {
@@ -100,7 +100,7 @@ describe('util/message-handler', function() {
           return {message: `${message} ${a} ${b}`};
         },
       };
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
+      return expect(processMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     // Like the previous example, but handler returns a promise.
@@ -110,7 +110,7 @@ describe('util/message-handler', function() {
           return Promise.resolve({message: `${message} ${a} ${b}`}); // THIS LINE IS DIFFERENT
         },
       };
-      return expect(handleMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
+      return expect(processMessage(handler, 'foo', 1, 2)).to.become({message: 'foo 1 2'});
     });
 
     it('should reject if an exception is thrown in a child handler', function() {
@@ -121,7 +121,7 @@ describe('util/message-handler', function() {
           },
         },
       ];
-      return expect(handleMessage(handlers, 'foo', 1, 2)).to.be.rejectedWith('whoops');
+      return expect(processMessage(handlers, 'foo', 1, 2)).to.be.rejectedWith('whoops');
     });
 
     describe('complex examples', function() {
@@ -136,7 +136,7 @@ describe('util/message-handler', function() {
 
       it('should run handlers in order / should yield false if no children returned a non-false value', function() {
         const handlers = 'abcdefgh'.split('').map(s => this.getHandler(s, false));
-        const promise = handleMessage(handlers, '<', '>');
+        const promise = processMessage(handlers, '<', '>');
         return Promise.all([
           expect(promise).to.become(false),
           promise.then(() => {
@@ -163,7 +163,7 @@ describe('util/message-handler', function() {
           ],
           getHandler('h', {message: 'done'}),
         ];
-        const promise = handleMessage(handlers, '<', '>');
+        const promise = processMessage(handlers, '<', '>');
         return Promise.all([
           expect(promise).to.become({message: 'done'}),
           promise.then(() => {
@@ -195,7 +195,7 @@ describe('util/message-handler', function() {
           ],
           getHandler('h', {message: 'done'}),
         ];
-        const promise = handleMessage(handlers, '<', '>');
+        const promise = processMessage(handlers, '<', '>');
         return Promise.all([
           expect(promise).to.become({message: 'done'}),
           promise.then(() => {
@@ -228,7 +228,7 @@ describe('util/message-handler', function() {
           ],
           getHandler('h', {message: 'done'}),
         ];
-        const promise = handleMessage(handlers, '<', '>');
+        const promise = processMessage(handlers, '<', '>');
         return Promise.all([
           expect(promise).to.become({message: 'early'}),
           promise.then(() => {
@@ -264,7 +264,7 @@ describe('util/message-handler', function() {
           ],
           getHandler('h', {message: 'done'}),
         ];
-        const promise = handleMessage(handlers, '<', '>');
+        const promise = processMessage(handlers, '<', '>');
         return Promise.all([
           expect(promise).to.become({message: 'early'}),
           promise.then(() => {

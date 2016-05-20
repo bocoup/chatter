@@ -1,5 +1,5 @@
 import Promise from 'bluebird';
-import {handleMessage} from '../src';
+import {processMessage} from '../src';
 
 // Simulate a promise-yielding database abstraction.
 const db = {
@@ -81,7 +81,7 @@ function header(message) {
 
 function simulate(messageHandler, message) {
   console.log('[In]', message);
-  return handleMessage(messageHandler, message).then(response => {
+  return processMessage(messageHandler, message).then(response => {
     if (response === false) {
       console.log('-');
     }

@@ -6,7 +6,7 @@
 // https://my.slack.com/services/new/bot
 
 import {RtmClient, MemoryDataStore} from '@slack/client';
-import {handleMessage} from '../src';
+import {processMessage} from '../src';
 
 // Respond to the word "hello".
 const helloHandler = message => {
@@ -43,7 +43,7 @@ rtmClient.on('open', () => {
 rtmClient.on('message', message => {
   const {text, channel} = message;
   // Pass message text through all message handlers.
-  handleMessage(messageHandlers, text)
+  processMessage(messageHandlers, text)
   // Handle response.
   .then(response => {
     if (response === false) {

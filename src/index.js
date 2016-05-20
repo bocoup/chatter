@@ -10,7 +10,7 @@ export {ConversingMessageHandler, default as createConversation} from './message
 export {CommandMessageHandler, default as createCommand} from './message-handler/command';
 
 // Util
-export {handleMessage} from './util/message-handler';
+export {processMessage, isMessageHandlerOrHandlers} from './util/process-message';
 export {parseArgs} from './util/args-parser';
 export {isMessage, normalizeMessage} from './util/response';
 export {composeCreators} from './message-handler/delegate';
