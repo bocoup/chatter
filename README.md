@@ -493,7 +493,7 @@ processMessage(conversationHandler, 'hello').then(handleResponse);
 // I'm sorry, but "hello" is not a valid choice. Try again.
 
 processMessage(conversationHandler, 'b').then(handleResponse);
-// Thank you for choosing "x".
+// Thank you for choosing "b".
 
 processMessage(conversationHandler, 'hello').then(handleResponse);
 // Hello to you too!
