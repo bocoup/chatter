@@ -2,23 +2,29 @@ import {DelegatingMessageHandler} from './delegate';
 import createMatcher from './matcher';
 import createParser from './parser';
 
+function formatCommand(...args) {
+  // console.log(`formatCommand <${args.join('> <')}>`);
+  return args.filter(Boolean).join(' ');
+}
+
 export class CommandMessageHandler extends DelegatingMessageHandler {
 
   constructor(options = {}, children) {
     super(options, children);
-    const {name, usage, description, details} = options;
+    const {name, usage, description, details, isParent} = options;
     this.isCommand = true;
     this.name = name;
     this.usage = usage;
     this.description = description;
     this.details = details;
+    this.isParent = isParent;
     // Ensure children is an array.
     if (!Array.isArray(this.children)) {
       this.children = [this.children];
     }
     // If this command has no name, it's the "top-level" command. Add a help
     // command and a fallback handler for usage information.
-    if (!name) {
+    if (isParent) {
       this.children = [
         ...this.children,
         this.createHelpCommand(),
@@ -45,7 +51,8 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
   getMatchingSubCommand(search) {
     let command = this; // eslint-disable-line consistent-this
     let exact = true;
-    const fullCommandNameParts = [];
+    const prefix = this.isParent ? this.name : '';
+    const subCommandNameParts = [];
     if (search) {
       const parts = search.split(/\s+/);
       for (let i = 0; i < parts.length; i++) {
@@ -55,40 +62,42 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
           break;
         }
         command = subCommand;
-        fullCommandNameParts.push(command.name);
+        subCommandNameParts.push(command.name);
       }
     }
     return {
       command,
+      prefix,
       exact,
-      fullCommandName: fullCommandNameParts.join(' '),
+      subCommandName: subCommandNameParts.join(' '),
     };
   }
 
   // Display usage info for this command, given the specified command name.
-  getUsage(commandName) {
+  getUsage(command, prefix) {
     if (!this.name) {
       return false;
     }
-    const usageFormatter = details => `${commandName} ${details}`;
-    // If usage is a function, pass the commandName to it.
-    const usage = typeof this.usage === 'function' ? this.usage(commandName) :
+    command = formatCommand(prefix, command);
+    const usageFormatter = details => formatCommand(command, details);
+    // If usage is a function, pass the command to it.
+    const usage = typeof this.usage === 'function' ? this.usage(command) :
       // If usage is a string, format it.
       this.usage ? usageFormatter(this.usage) :
       // If usage isn't specified, but the command has sub-commands, format it.
       this.hasSubCommands() ? usageFormatter('<command>') :
-      // Otherwise just return the commandName,
-      commandName;
+      // Otherwise just return the command,
+      command;
     return `Usage: \`${usage}\``;
   }
 
   // Get help info for this command, given the specified arguments.
-  helpInfo(search, fullCommandName, exact) {
-    const helpText = fullCommandName ? `help for *${fullCommandName}*` : 'general help';
+  helpInfo(search, command, prefix, exact) {
+    const helpText = command ? ` for *${formatCommand(prefix, command)}*` : prefix ? ` for *${prefix}*` : '';
     return [
-      !exact && `_Unknown command *${search}*, showing ${helpText}._`,
+      !exact && `_Unknown command *${formatCommand(prefix, search)}*, showing help${helpText}._`,
       this.description,
-      this.getUsage(fullCommandName),
+      this.getUsage(command, prefix),
       this.hasSubCommands() && '*Commands:*',
       this.subCommands.map(c => `> *${c.name}* - ${c.description}`),
       this.details,
@@ -104,21 +113,21 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
       usage: '<command>',
       handleMessage: createParser(({remain}) => {
         const search = remain.join(' ');
-        const {command, fullCommandName, exact} = this.getMatchingSubCommand(search);
-        return command.helpInfo(search, fullCommandName, exact);
+        const {command, subCommandName, prefix, exact} = this.getMatchingSubCommand(search);
+        return command.helpInfo(search, subCommandName, prefix, exact);
       }),
     });
   }
 
   // Get usage info for this command, given the specified arguments.
-  usageInfo(message, fullCommandName) {
-    const isMatch = Boolean(fullCommandName);
-    const usage = isMatch && this.getUsage(fullCommandName);
-    const name = fullCommandName ? ` ${fullCommandName}` : fullCommandName;
+  usageInfo(message, command, prefix) {
+    const isMatch = Boolean(command);
+    const usage = isMatch && this.getUsage(command, prefix);
+    const help = command = formatCommand(prefix, 'help', command);
     return [
-      !isMatch && `Unknown command *${message}*.`,
+      !isMatch && `Unknown command *${formatCommand(prefix, message)}*.`,
       usage,
-      `${usage ? 'Or try' : 'Try'} *help${name}* for more information.`,
+      `${usage ? 'Or try' : 'Try'} *${help}* for more information.`,
     ];
   }
 
@@ -127,8 +136,8 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
   // every other handler returns false. Ie. no other command matched.
   createFallbackHandler() {
     return message => {
-      const {command, fullCommandName} = this.getMatchingSubCommand(message);
-      return command.usageInfo(message, fullCommandName);
+      const {command, subCommandName, prefix} = this.getMatchingSubCommand(message);
+      return command.usageInfo(message, subCommandName, prefix);
     };
   }
 

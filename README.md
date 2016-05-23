@@ -365,43 +365,42 @@ return arrays, and should be normalized into a newline-joined string with the
 included [normalizeMessage] helper function.
 
 ```js
-const echoCommand = createCommand({
-  name: 'echo',
-  description: 'Echoes what you say back to you.',
-  usage: '<message>',
-}, function(message) {
-  if (!message) {
-    return false;
-  }
-  return `You said "${message}".`;
-});
-
 const addCommand = createCommand({
   name: 'add',
   description: 'Adds some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function(parsed) {
-  const result = parsed.remain.reduce((sum, num) => sum + Number(num), 0);
-  return `${parsed.remain.join(' + ')} = ${result}`;
+}, createParser(function({remain}) {
+  const result = remain.reduce((sum, n) => sum + Number(n), 0);
+  return `${remain.join(' + ')} = ${result}`;
+}));
+
+const multiplyCommand = createCommand({
+  name: 'multiply',
+  description: 'Multiplies some numbers.',
+  usage: 'number [ number [ number ... ] ]',
+}, createParser(function({remain}) {
+  const result = remain.reduce((product, n) => product * Number(n), 1);
+  return `${remain.join(' x ')} = ${result}`;
 }));
 
 const rootCommand = createCommand({
-  description: 'Some commands.',
+  isParent: true,
+  description: 'Some example math commands.',
 }, [
-  echoCommand,
   addCommand,
+  multiplyCommand,
 ]);
 
 processMessage(rootCommand, 'hello');
-// Unknown command hello.
-// Try help for more information.
+// Unknown command *hello*.
+// Try *help* for more information.
 
 processMessage(rootCommand, 'help');
-// Some commands.
-// Commands:
-//   echo - Echoes what you say back to you.
-//   add - Adds some numbers.
-//   help - Get help for the specified command.
+// Some example math commands.
+// *Commands:*
+// > *add* - Adds some numbers.
+// > *multiply* - Multiplies some numbers.
+// > *help* - Get help for the specified command.
 
 processMessage(rootCommand, 'help add');
 // Adds some numbers.
@@ -410,15 +409,16 @@ processMessage(rootCommand, 'help add');
 processMessage(rootCommand, 'add 3 4 5');
 // 3 + 4 + 5 = 12
 
-processMessage(rootCommand, 'echo hello world');
-// You said "hello world".
+processMessage(rootCommand, 'multiply');
+// Usage: `multiply number [ number [ number ... ] ]`
+// Or try *help multiply* for more information.
 
-processMessage(rootCommand, 'echo');
-// Usage: `echo <message>`
-// Or try help echo for more information.
+processMessage(rootCommand, 'multiply 3 4 5');
+// 3 x 4 x 5 = 60
 ```
 
-See the [create-command](examples/create-command.js) example.
+See the [create-command](examples/create-command.js) and
+[create-command-namespaced](examples/create-command-namespaced.js) examples.
 
 ### API
 
