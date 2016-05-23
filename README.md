@@ -427,7 +427,8 @@ specified message handler, doing nothing of note until that message handler
 returns an object with a `dialog` property, which should be a NEW
 message handler. At that point, the new message handler is stored and used
 _instead of the originally-specified message handler_ to handle the next
-message. After that message, the message handler is reverted to the original.
+message. After that message, the message handler is reverted to the original,
+unless a new `dialog` is specified, in which case it is used instead.
 
 Conversations can be used to create an interactive sequence of message handlers,
 and must be be cached on a per-conversation basis (usually per-channel or
