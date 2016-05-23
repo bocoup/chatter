@@ -62,9 +62,9 @@ const echoCommand = createCommand({
 // A command that adds some numbers.
 const addCommand = createCommand({
   name: 'add',
-  description: `I'll add some numbers for you!`,
-  usage: '<list of numbers>',
-}, createParser(({remain, input}) => {
+  description: 'Adds some numbers.',
+  usage: 'number [ number [ number ... ] ]',
+}, createParser(function({remain, input}) {
   if (!input) {
     return false;
   }
@@ -72,23 +72,24 @@ const addCommand = createCommand({
   if (isNaN(result)) {
     return `Whoops! Are you sure those were all numbers?`;
   }
-  return `Apparently, ${remain.join(' + ')} = ${result}.`;
+  return `${remain.join(' + ')} = ${result}`;
 }));
 
+
 // A command that multiplies some numbers.
-const multCommand = createCommand({
-  name: 'mult',
-  description: `I'll multiply some numbers for you!`,
-  usage: '<list of numbers>',
-}, createParser(({remain, input}) => {
+const multiplyCommand = createCommand({
+  name: 'multiply',
+  description: 'Multiplies some numbers.',
+  usage: 'number [ number [ number ... ] ]',
+}, createParser(function({remain, input}) {
   if (!input) {
     return false;
   }
-  const result = remain.reduce((sum, n) => sum * Number(n), 1);
+  const result = remain.reduce((product, n) => product * Number(n), 1);
   if (isNaN(result)) {
     return `Whoops! Are you sure those were all numbers?`;
   }
-  return `Apparently, ${remain.join(' x ')} = ${result}.`;
+  return `${remain.join(' x ')} = ${result}`;
 }));
 
 // Math commands.
@@ -97,7 +98,7 @@ const mathCommand = createCommand({
   description: `Math-related commands.`,
 }, [
   addCommand,
-  multCommand,
+  multiplyCommand,
 ]);
 
 // The bot.
@@ -122,9 +123,10 @@ const bot = createSlackBot({
     return createConversation([
       // Handle direct (private) messages:
       this.createSlackMessageHandler({dm: true}, [
-        // Top-level command that encapsulates sub-commands and adds a "help"
+        // Nameless command that encapsulates sub-commands and adds a "help"
         // command and a fallback message handler.
         createCommand({
+          isParent: true,
           description: `Hi, I'm the test bot!`,
         }, [
           delayCommand,
@@ -135,6 +137,17 @@ const bot = createSlackBot({
       // Handle public messages, assuming the bot's actually in one or more
       // channels.
       this.createSlackMessageHandler({channel: true}, [
+        // In public, a top-level command should really be namespaced.
+        createCommand({
+          name: 'bot',
+          isParent: true,
+          description: `Hi, I'm the test bot!`,
+        }, [
+          delayCommand,
+          echoCommand,
+          mathCommand,
+        ]),
+        // Non-command message handlers.
         helloHandler,
         lolHandler,
       ]),
