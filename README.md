@@ -1,4 +1,4 @@
-# bot-framework
+# chatter
 
 A collection of useful primitives for creating interactive chat bots.
 

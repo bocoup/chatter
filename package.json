@@ -1,7 +1,7 @@
 {
-  "name": "bot-framework",
+  "name": "chatter",
   "version": "0.1.0",
-  "description": "A framework for bots.",
+  "description": "A collection of useful primitives for creating interactive chat bots.",
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bocoup/bot-framework.git"
+    "url": "git+https://github.com/bocoup/chatter.git"
   },
   "author": "\"Cowboy\" Ben Alman (http://benalman.com/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bocoup/bot-framework/issues"
+    "url": "https://github.com/bocoup/chatter/issues"
   },
-  "homepage": "https://github.com/bocoup/bot-framework#readme",
+  "homepage": "https://github.com/bocoup/chatter#readme",
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.7.5",
     "bluebird": "^3.3.5",
