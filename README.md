@@ -423,11 +423,11 @@ See the [create-command](examples/create-command.js) and
 #### createConversation
 
 The `createConversation` function creates a new message handler that calls the
-specified message handler, doing nothing of note until the message handler
-returns an object with a `dialog` property, which should be a message handler.
-At that point, the new message handler is stored and used _instead of the
-originally-specified message handler_ to handle the next message. After that,
-the message handler is reverted to the original.
+specified message handler, doing nothing of note until that message handler
+returns an object with a `dialog` property, which should be a NEW
+message handler. At that point, the new message handler is stored and used
+_instead of the originally-specified message handler_ to handle the next
+message. After that message, the message handler is reverted to the original.
 
 Conversations can be used to create an interactive sequence of message handlers.
 Keep in mind, though, that conversation message handlers need to keep track of
