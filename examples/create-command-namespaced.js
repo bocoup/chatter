@@ -1,5 +1,5 @@
 // Run "npm install" and then test with this command in your shell:
-// npm run babel examples/create-command.js
+// npm run babel examples/create-command-namespaced.js
 
 import Promise from 'bluebird';
 import {processMessage, normalizeMessage, createCommand, createParser} from '../src';
