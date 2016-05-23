@@ -18,32 +18,12 @@ export class SlackMessageHandler extends DelegatingMessageHandler {
     return (this.dm === true && channel.is_im) || (this.channel === true && !channel.is_im);
   }
 
-  // Parse arguments and options from message and pass the resulting object
-  // into the specified handleMessage function.
-  handleMessage(message) {
-    const {bot} = this;
-    const {slack} = this.bot;
-    const channel = slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
-    // Ignore non-message messages.
-    if (!this.isValidChannel(channel) || message.type !== 'message') {
+  handleMessage(message, meta) {
+    // Ignore messages that should be ignored.
+    if (!this.isValidChannel(meta.channel)) {
       return Promise.resolve(false);
     }
-    // If the message was a "changed" message, get the underlying message.
-    if (message.subtype === 'message_changed') {
-      message = message.message;
-    }
-    // Any message with a subtype or attachments can be safely ignored.
-    if (message.subtype || message.attachments) {
-      return Promise.resolve(false);
-    }
-    const user = slack.rtmClient.dataStore.getUserById(message.user);
-    const meta = {
-      bot,
-      slack,
-      channel,
-      user,
-    };
-    return super.handleMessage(message.text, meta);
+    return super.handleMessage(message, meta);
   }
 
 }
