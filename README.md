@@ -1,6 +1,7 @@
 # chatter
+> A collection of useful primitives for creating interactive chat bots.
 
-A collection of useful primitives for creating interactive chat bots.
+[![NPM](https://nodei.co/npm/chatter.png)](https://nodei.co/npm/chatter/)
 
 ## Examples
 
