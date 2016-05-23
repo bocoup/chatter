@@ -51,7 +51,7 @@ describe('slack/message-handler/slack', function() {
 
       it('should return a promise that gets fulfilled', function() {
         const handler = createSlackMessageHandler(bot, nop);
-        return expect(handler.handleMessage({channel: 1})).to.be.fulfilled();
+        return expect(handler.handleMessage('foo', {channel: {}})).to.be.fulfilled();
       });
 
     });

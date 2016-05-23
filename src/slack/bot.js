@@ -1,6 +1,6 @@
-import Promise from 'bluebird';
 import {Bot} from '../bot';
-import {isMessage, normalizeMessage} from '../util/response';
+import {overrideProperties} from '../util/class';
+
 import createSlackMessageHandler from './message-handler/slack';
 import {parseMessage} from './util/message-parser';
 
@@ -22,7 +22,12 @@ export class SlackBot extends Bot {
     }
     this.name = name;
     this.slack = slack;
-    this.overrideProperties(options);
+    overrideProperties(this, options, [
+      'onOpen',
+      'onError',
+      'login',
+      'postMessageOptions',
+    ]);
     this.bindEventHandlers(['open', 'error', 'message']);
   }
 
@@ -43,24 +48,36 @@ export class SlackBot extends Bot {
     });
   }
 
-  overrideProperties(options) {
-    const overrides = [
-      'onOpen',
-      'onError',
-      'onMessage',
-      'login',
-      'ignoreMessage',
-      'getConversationId',
-      'postMessage',
-      'postMessageOptions',
-      'handleResponse',
-      'handleResponseError',
-    ];
-    overrides.forEach(name => {
-      if (options[name]) {
-        this[name] = options[name];
-      }
-    });
+  ignoreMessage(message) {
+    return message.subtype === 'bot_message';
+  }
+
+  getConversationId(message) {
+    return message.channel;
+  }
+
+  getMessageHandlerArgs(message) {
+    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
+    // Ignore non-message messages.
+    if (message.type !== 'message') {
+      return false;
+    }
+    // If the message was a "changed" message, get the underlying message.
+    if (message.subtype === 'message_changed') {
+      message = message.message;
+    }
+    // Any message with a subtype or attachments can be safely ignored.
+    if (message.subtype || message.attachments) {
+      return false;
+    }
+    const user = this.slack.rtmClient.dataStore.getUserById(message.user);
+    const meta = {
+      bot: this,
+      slack: this.slack,
+      channel,
+      user,
+    };
+    return [message.text, meta];
   }
 
   onOpen() {
@@ -71,67 +88,26 @@ export class SlackBot extends Bot {
     console.log('Bot error.', args);
   }
 
-  onMessage(message) {
-    if (this.ignoreMessage(message)) {
-      return;
-    }
-    const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
-    Promise.try(() => {
-      const id = this.getConversationId(channel, message);
-      const messageHandler = this.getMessageHandler(id);
-      return this.processMessage(messageHandler, message);
-    })
-    .then(response => {
-      this.handleResponse(channel, response);
-    })
-    .catch(error => {
-      this.handleResponseError(channel, error);
-    });
-  }
-
   login() {
     this.slack.rtmClient.start();
     return this;
   }
 
-  ignoreMessage(message) {
-    return message.subtype === 'bot_message';
-  }
-
-  getConversationId(channel, message) {
-    return channel.id;
-  }
-
-  postMessage(channel, message, options) {
-    const channelId = channel && channel.id;
-    const text = isMessage(message) ? normalizeMessage(message) :
-      isMessage(message.message) ? normalizeMessage(message.message) :
-      null;
+  sendResponse(message, response, options) {
+    const text = this.normalizeResponse(response);
     if (!options) {
-      options = this.postMessageOptions(text, {message, channel});
+      options = this.postMessageOptions(text, message, response);
     }
-    return this.slack.webClient.chat.postMessage(channelId, null, options);
+    return this.slack.webClient.chat.postMessage(message.channel, null, options);
   }
 
-  postMessageOptions(text, meta) {
+  postMessageOptions(text, message, response) {
     return {
       username: this.name,
       text,
       unfurl_links: false,
       unfurl_media: false,
     };
-  }
-
-  handleResponse(channel, response) {
-    if (response === false) {
-      return;
-    }
-    this.postMessage(channel, response);
-  }
-
-  handleResponseError(channel, error) {
-    console.error(error.stack);
-    this.postMessage(channel, `An error occurred: \`${error.message}\``);
   }
 
 }
