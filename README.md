@@ -369,18 +369,18 @@ const addCommand = createCommand({
   name: 'add',
   description: 'Adds some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function({remain}) {
-  const result = remain.reduce((sum, n) => sum + Number(n), 0);
-  return `${remain.join(' + ')} = ${result}`;
+}, createParser(function(parsed) {
+  const result = parsed.remain.reduce((sum, n) => sum + Number(n), 0);
+  return `${parsed.remain.join(' + ')} = ${result}`;
 }));
 
 const multiplyCommand = createCommand({
   name: 'multiply',
   description: 'Multiplies some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function({remain}) {
-  const result = remain.reduce((product, n) => product * Number(n), 1);
-  return `${remain.join(' x ')} = ${result}`;
+}, createParser(function(parsed) {
+  const result = parsed.remain.reduce((product, n) => product * Number(n), 1);
+  return `${parsed.remain.join(' x ')} = ${result}`;
 }));
 
 const rootCommand = createCommand({
@@ -419,6 +419,89 @@ processMessage(rootCommand, 'multiply 3 4 5');
 
 See the [create-command](examples/create-command.js) and
 [create-command-namespaced](examples/create-command-namespaced.js) examples.
+
+#### createConversation
+
+The `createConversation` function creates a new message handler that calls the
+specified message handler, doing nothing of note until that message handler
+returns an object with a `dialog` property, which should be a NEW
+message handler. At that point, the new message handler is stored and used
+_instead of the originally-specified message handler_ to handle the next
+message. After that message, the message handler is reverted to the original,
+unless a new `dialog` is specified, in which case it is used instead.
+
+Conversations can be used to create an interactive sequence of message handlers,
+and must be be cached on a per-conversation basis (usually per-channel or
+per-direct message), because of the need to keep track of the current dialog.
+
+```js
+const helloHandler = function(message) {
+  return message.indexOf('hello') !== -1 ? 'Hello to you too!' : false;
+};
+
+const askHandler = createMatcher({match: 'ask'}, function() {
+  return {
+    message: 'Why do you want me to ask you a question?',
+    dialog(message) {
+      return `I'm not sure "${message}" is a good reason.`;
+    },
+  };
+});
+
+const chooseHandler = createMatcher({match: 'choose'}, function() {
+  return {
+    message: `Choose one of the following: a, b or c.`,
+    dialog: handleChoices,
+  };
+});
+
+const handleChoices = function(choice) {
+  if (choice === 'a' || choice === 'b' || choice === 'c') {
+    return `Thank you for choosing "${choice}".`;
+  }
+  return {
+    message: `I'm sorry, but "${choice}" is not a valid choice. Try again.`,
+    dialog: handleChoices,
+  };
+};
+
+const conversationHandler = createConveration([
+  helloHandler,
+  askHandler,
+  chooseHandler,
+]);
+
+function handleResponse(response) {
+  if (response !== false) {
+    console.log(response.message || response);
+  }
+}
+
+processMessage(conversationHandler, 'ask').then(handleResponse);
+// Why do you want me to ask you a question?
+
+processMessage(conversationHandler, 'hello').then(handleResponse);
+// I'm not sure "hello" is a good reason.
+
+processMessage(conversationHandler, 'hello').then(handleResponse);
+// Hello to you too!
+
+processMessage(conversationHandler, 'choose').then(handleResponse);
+// Choose one of the following: a, b or c.
+
+processMessage(conversationHandler, 'hello').then(handleResponse);
+// I'm sorry, but "hello" is not a valid choice. Try again.
+
+processMessage(conversationHandler, 'b').then(handleResponse);
+// Thank you for choosing "b".
+
+processMessage(conversationHandler, 'hello').then(handleResponse);
+// Hello to you too!
+```
+
+See the [conversation](examples/conversation.js) example.
+
+
 
 ### API
 
