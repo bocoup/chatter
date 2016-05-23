@@ -429,11 +429,9 @@ message handler. At that point, the new message handler is stored and used
 _instead of the originally-specified message handler_ to handle the next
 message. After that message, the message handler is reverted to the original.
 
-Conversations can be used to create an interactive sequence of message handlers.
-Keep in mind, though, that conversation message handlers need to keep track of
-the returned "dialog" message handler. Because of this state, conversations must
-be cached and reused on a per-user or per-channel basis. The [Bot] has this
-caching built-in.
+Conversations can be used to create an interactive sequence of message handlers,
+and must be be cached on a per-conversation basis (usually per-channel or
+per-direct message), because of the need to keep track of the current dialog.
 
 ```js
 const helloHandler = function(message) {
@@ -471,6 +469,7 @@ const conversationHandler = createConveration([
   askHandler,
   chooseHandler,
 ]);
+
 function handleResponse(response) {
   if (response !== false) {
     console.log(response.message || response);
@@ -498,6 +497,8 @@ processMessage(conversationHandler, 'b').then(handleResponse);
 processMessage(conversationHandler, 'hello').then(handleResponse);
 // Hello to you too!
 ```
+
+See the [conversation](examples/conversation.js) example.
 
 
 
