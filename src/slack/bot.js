@@ -71,11 +71,11 @@ export class SlackBot extends Bot {
   }
 
   onOpen() {
-    console.log('Bot connected.');
+    console.log(`${this.name} connected.`);
   }
 
   onError(...args) {
-    console.log('Bot error.', args);
+    console.log(`${this.name} error:`, args);
   }
 
   login() {
