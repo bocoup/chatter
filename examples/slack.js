@@ -118,39 +118,36 @@ const bot = createSlackBot({
   // Whenever a new message comes in, it'll be handled by what this returns.
   // If a stateful message handler is used (like a conversation), it will
   // be cached.
-  createMessageHandler() {
-    // A conversation allows the bot to remember "dialogs" by channel.
+  createMessageHandler(id, {channel}) {
+    // Direct message
+    if (channel.is_im) {
+      return createConversation([
+        // Nameless top-level command.
+        createCommand({
+          isParent: true,
+          description: `Hi, I'm the test bot!`,
+        }, [
+          delayCommand,
+          echoCommand,
+          mathCommand,
+        ]),
+      ]);
+    }
+    // Public channel
     return createConversation([
-      // Handle direct (private) messages:
-      this.createSlackMessageHandler({dm: true}, [
-        // Nameless command that encapsulates sub-commands and adds a "help"
-        // command and a fallback message handler.
-        createCommand({
-          isParent: true,
-          description: `Hi, I'm the test bot!`,
-        }, [
-          delayCommand,
-          echoCommand,
-          mathCommand,
-        ]),
+      // In public, top-level command(s) should really be namespaced.
+      createCommand({
+        name: 'bot',
+        isParent: true,
+        description: `Hi, I'm the test bot!`,
+      }, [
+        delayCommand,
+        echoCommand,
+        mathCommand,
       ]),
-      // Handle public messages, assuming the bot's actually in one or more
-      // channels.
-      this.createSlackMessageHandler({channel: true}, [
-        // In public, a top-level command should really be namespaced.
-        createCommand({
-          name: 'bot',
-          isParent: true,
-          description: `Hi, I'm the test bot!`,
-        }, [
-          delayCommand,
-          echoCommand,
-          mathCommand,
-        ]),
-        // Non-command message handlers.
-        helloHandler,
-        lolHandler,
-      ]),
+      // Non-command message handlers.
+      helloHandler,
+      lolHandler,
     ]);
   },
 });

@@ -1,7 +1,5 @@
 import {Bot} from '../bot';
 import {overrideProperties} from '../util/class';
-
-import createSlackMessageHandler from './message-handler/slack';
 import {parseMessage} from './util/message-parser';
 
 export class SlackBot extends Bot {
@@ -31,10 +29,6 @@ export class SlackBot extends Bot {
     this.bindEventHandlers(['open', 'error', 'message']);
   }
 
-  createSlackMessageHandler(...args) {
-    return createSlackMessageHandler(this, ...args);
-  }
-
   parseMessage(...args) {
     return parseMessage(this.slack, ...args);
   }
@@ -52,11 +46,12 @@ export class SlackBot extends Bot {
     return message.subtype === 'bot_message';
   }
 
-  getConversationId(message) {
+  getConversationId({message}) {
     return message.channel;
   }
 
   getMessageHandlerArgs(message) {
+    const origMessage = message;
     const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     // Ignore non-message messages.
     if (message.type !== 'message') {
@@ -74,10 +69,14 @@ export class SlackBot extends Bot {
     const meta = {
       bot: this,
       slack: this.slack,
+      message: origMessage,
       channel,
       user,
     };
-    return [message.text, meta];
+    return {
+      text: message.text,
+      args: [meta],
+    };
   }
 
   onOpen() {

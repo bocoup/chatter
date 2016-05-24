@@ -35,18 +35,12 @@ export class Bot {
       return Promise.resolve();
     }
     return Promise.try(() => {
-      const id = this.getConversationId(message);
-      const messageHandler = this.getMessageHandler(id);
-      const args = this.getMessageHandlerArgs(message);
-      return [messageHandler, args];
+      const {text, args = []} = this.getMessageHandlerArgs(message);
+      const id = this.getConversationId(...args);
+      const messageHandler = this.getMessageHandler(id, ...args);
+      return this.processMessage(messageHandler, text, ...args);
     })
-    .spread((messageHandler, args) => {
-      if (args === false) {
-        return false;
-      }
-      return this.processMessage(messageHandler, ...args)
-        .then(response => this.handleResponse(message, response));
-    })
+    .then(response => this.handleResponse(message, response))
     .catch(error => this.handleError(message, error));
   }
 
@@ -58,11 +52,11 @@ export class Bot {
     return message.id;
   }
 
-  getMessageHandler(id) {
+  getMessageHandler(id, ...args) {
     if (this.handlerMap[id]) {
       return this.handlerMap[id];
     }
-    const messageHandler = this.createMessageHandler(id);
+    const messageHandler = this.createMessageHandler(id, ...args);
     if (messageHandler.hasState) {
       this.handlerMap[id] = messageHandler;
     }
@@ -70,8 +64,10 @@ export class Bot {
   }
 
   getMessageHandlerArgs(message) {
-    const {text, id} = message;
-    return [text, id];
+    return {
+      text: message.text,
+      args: [message],
+    };
   }
 
   handleResponse(message, response) {
