@@ -107,13 +107,15 @@ const bot = createSlackBot({
   name: 'Test Bot',
   // Instances of the slack rtm and web client, per
   // https://github.com/slackhq/node-slack-sdk
-  slack: {
-    rtmClient: new RtmClient(process.env.SLACK_API_TOKEN, {
-      dataStore: new MemoryDataStore(),
-      autoReconnect: true,
-      logLevel: 'error',
-    }),
-    webClient: new WebClient(process.env.SLACK_API_TOKEN),
+  getSlack() {
+    return {
+      rtmClient: new RtmClient(process.env.SLACK_API_TOKEN, {
+        dataStore: new MemoryDataStore(),
+        autoReconnect: true,
+        logLevel: 'error',
+      }),
+      webClient: new WebClient(process.env.SLACK_API_TOKEN),
+    };
   },
   // Whenever a new message comes in, it'll be handled by what this returns.
   // If a stateful message handler is used (like a conversation), it will

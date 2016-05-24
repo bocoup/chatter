@@ -5,28 +5,19 @@ import {parseMessage} from './util/message-parser';
 export class SlackBot extends Bot {
   constructor(options = {}) {
     super(options);
-    const {slack, name = 'Test Bot'} = options;
-    if (!slack) {
-      throw new TypeError('Missing required "slack" option.');
-    }
-    else if (!slack.rtmClient) {
-      throw new TypeError('Missing required "slack.rtmClient" option.');
-    }
-    else if (!slack.rtmClient.dataStore) {
-      throw new TypeError('Missing required "slack.rtmClient.dataStore" property.');
-    }
-    else if (!slack.webClient) {
-      throw new TypeError('Missing required "slack.webClient" option.');
+    const {slack, getSlack, name = 'Test Bot'} = options;
+    if (!slack && !getSlack) {
+      throw new TypeError('Missing required "slack" or "getSlack" option.');
     }
     this.name = name;
     this.slack = slack;
+    this.getSlack = getSlack;
     overrideProperties(this, options, [
       'onOpen',
       'onError',
       'login',
       'postMessageOptions',
     ]);
-    this.bindEventHandlers(['open', 'error', 'message']);
   }
 
   parseMessage(...args) {
@@ -88,6 +79,23 @@ export class SlackBot extends Bot {
   }
 
   login() {
+    if (!this.slack) {
+      this.slack = this.getSlack();
+      if (!this.slack || typeof this.slack !== 'object') {
+        throw new TypeError('The "getSlack" function must return an object.');
+      }
+    }
+    const slack = this.slack;
+    if (!slack.rtmClient) {
+      throw new TypeError('The "slack" object is missing a required "rtmClient" property.');
+    }
+    else if (!slack.rtmClient.dataStore) {
+      throw new TypeError('The "slack" object is missing a required "rtmClient.dataStore" property.');
+    }
+    else if (!slack.webClient) {
+      throw new TypeError('The "slack" object is missing a required "webClient" property.');
+    }
+    this.bindEventHandlers(['open', 'error', 'message']);
     this.slack.rtmClient.start();
     return this;
   }
