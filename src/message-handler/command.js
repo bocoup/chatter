@@ -45,7 +45,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
     return this.subCommands.length > 0;
   }
 
-  // Search for a matching sub-command. IF an exact match isn't found, return
+  // Search for a matching sub-command. If an exact match isn't found, return
   // the closest matching parent command. Returns the matched command, the full
   // name (ie. path) to that command, and whether or not it was an exact match.
   getMatchingSubCommand(search) {
@@ -56,7 +56,17 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
     if (search) {
       const parts = search.split(/\s+/);
       for (let i = 0; i < parts.length; i++) {
-        const subCommand = command.subCommands.find(c => c.name && c.name === parts[i]);
+        const subCommand = command.subCommands.find(({name}) => {
+          if (name) {
+            for (let j = i; j < parts.length; j++) {
+              if (parts.slice(i, j + 1).join(' ') === name) {
+                i = j;
+                return true;
+              }
+            }
+          }
+          return false;
+        });
         if (!subCommand) {
           exact = false;
           break;
