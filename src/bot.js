@@ -67,6 +67,9 @@ export class Bot {
       return this.handlerMap[id];
     }
     const messageHandler = this.createMessageHandler(id, ...args);
+    if (!messageHandler) {
+      return false;
+    }
     if (messageHandler.hasState) {
       this.handlerMap[id] = messageHandler;
     }
