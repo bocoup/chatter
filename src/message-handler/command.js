@@ -121,7 +121,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
 
   // Get usage info for this command, given the specified arguments.
   usageInfo(message, command, prefix) {
-    const isMatch = Boolean(command);
+    const isMatch = !message || Boolean(command);
     const usage = isMatch && this.getUsage(command, prefix);
     const help = command = formatCommand(prefix, 'help', command);
     return [
