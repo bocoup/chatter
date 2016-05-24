@@ -35,12 +35,22 @@ export class Bot {
       return Promise.resolve();
     }
     return Promise.try(() => {
-      const {text, args = []} = this.getMessageHandlerArgs(message);
+      const messageHandlerArgs = this.getMessageHandlerArgs(message);
+      if (messageHandlerArgs === false) {
+        return [false];
+      }
+      const {text, args = []} = messageHandlerArgs;
       const id = this.getConversationId(...args);
       const messageHandler = this.getMessageHandler(id, ...args);
-      return this.processMessage(messageHandler, text, ...args);
+      return [messageHandler, text, args];
     })
-    .then(response => this.handleResponse(message, response))
+    .spread((messageHandler, text, args) => {
+      if (messageHandler === false) {
+        return false;
+      }
+      return this.processMessage(messageHandler, text, ...args)
+        .then(response => this.handleResponse(message, response));
+    })
     .catch(error => this.handleError(message, error));
   }
 
