@@ -14,13 +14,13 @@ import {
 
 // Respond to a message starting with "parse", then return response with the
 // parsed args.
-const parseHandler = createMatcher({match: 'parse'}, createParser(({remain}, user) => {
+const parseHandler = createMatcher({match: 'parse'}, createParser(({remain}, {user}) => {
   return `Parse received <${remain.join('> <')}> from ${user}.`;
 }));
 
 // Respond to a message starting with "message", then return response with
 // the remainder of the message.
-const messageHandler = createMatcher({match: 'message'}, (message, user) => {
+const messageHandler = createMatcher({match: 'message'}, (message, {user}) => {
   return `Message received "${message}" from ${user}.`;
 });
 
@@ -29,10 +29,10 @@ const messageHandler = createMatcher({match: 'message'}, (message, user) => {
 // message.
 const askHandler = createMatcher({
   match: 'ask',
-  handleMessage(message, user) {
+  handleMessage(message, {user}) {
     return {
       message: `Why do you want me to ask you a question, ${user}?`,
-      dialog(message, user) {
+      dialog(message, {user}) {
         return `I'm not sure "${message}" is a good reason, ${user}.`;
       },
     };
@@ -44,7 +44,7 @@ const askHandler = createMatcher({
 // message.
 const chooseHandler = createMatcher({
   match: 'choose',
-  handleMessage(message, user) {
+  handleMessage(message, {user}) {
     return {
       message: `Choose one of the following, ${user}: a, b, c or exit.`,
       dialog: getChooseHandlerChoices(['a', 'b', 'c'], choice => `Thank you for choosing "${choice}".`),
@@ -91,7 +91,7 @@ const parentHandler = createMatcher({match: 'parent'}, [
   chooseHandler,
   // Create a "fallback" handler that always returns a message if none of the
   // preceding message handlers match (ie. they all return false)
-  (message, user) => `Parent fallback received "${message}" from ${user}.`,
+  (message, {user}) => `Parent fallback received "${message}" from ${user}.`,
 ]);
 
 // =========================
@@ -114,7 +114,7 @@ const whoopsHandler = createMatcher({
 
 const myBot = createBot({
   // This function must be specified. Even though not used here, this function
-  // receives the id sent to bot.getMessageHandler, which can be used to
+  // receives the id returned by getConversationId, which can be used to
   // programatically return a different message handler.
   createMessageHandler(id) {
     // Because a "conversation" message handler has state, it will be cached
@@ -124,16 +124,11 @@ const myBot = createBot({
       whoopsHandler,
     ]);
   },
-  // Get the conversation id from the message object passed into onMessage.
+  // Get the conversation id from the "message" object passed into onMessage.
+  // Try returning a fixed value to show how the bot uses the id to cache
+  // message handlers.
   getConversationId(message) {
     return message.user;
-  },
-  // Get the arguments to be passed into the top-level message handler from the
-  // message object passed into onMessage. The first argument should be the
-  // actual message text.
-  getMessageHandlerArgs(message) {
-    const {text, user} = message;
-    return [text, user];
   },
   // Normally, this would actually send a message to a chat service, but since
   // this is a simulation, just log the response to the console.
@@ -158,7 +153,7 @@ function simulate(user, text) {
   const message = {user, text};
   // Normally, this would be run when a message event is received from a chat
   // service, but in this case we'll call it manually.
-  return myBot.onMessage(message);
+  return myBot.onMessage(message).then(() => Promise.delay(1000));
 }
 
 // Simulate a series of messages, in order. Note that multiple users can talk

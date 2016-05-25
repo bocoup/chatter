@@ -17,15 +17,17 @@ const addHandler = createMatcher({match: 'add'}, createParser(function(parsed) {
 // handle messages!
 // ================
 
+import chalk from 'chalk';
+function log(color, prefix, message) {
+  message = message.replace(/(\n)/g, `$1${' '.repeat(prefix.length + 1)}`);
+  console.log(chalk[color](`${prefix} ${message}`));
+}
+
 function simulate(messageHandler, message) {
-  console.log('[In]', message);
+  log('magenta', '\n[In] ', message);
   return processMessage(messageHandler, message).then(response => {
-    if (response === false) {
-      console.log('-');
-    }
-    else {
-      console.log('[Out]', response);
-    }
+    const text = response !== false ? response : '-';
+    log('green', '[Out]', text);
   });
 }
 

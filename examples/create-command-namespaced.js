@@ -54,7 +54,7 @@ function log(color, prefix, message) {
 }
 
 function simulate(messageHandler, message) {
-  log('magenta', '[In] ', message);
+  log('magenta', '\n[In] ', message);
   return processMessage(messageHandler, message).then(response => {
     const text = response !== false ? normalizeMessage(response) : '-';
     log('green', '[Out]', text);
@@ -74,4 +74,3 @@ Promise.mapSeries([
   () => simulate(mathCommand, 'math help multiply'),
   () => simulate(mathCommand, 'math multiply 3 4 5'),
 ], f => f());
-

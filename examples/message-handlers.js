@@ -1,3 +1,6 @@
+// Run "npm install" and then test with this command in your shell:
+// npm run babel examples/message-handlers.js
+
 import Promise from 'bluebird';
 import {processMessage} from '../src';
 
@@ -66,7 +69,7 @@ const matchAndRunChildHandlers = {
     if (remainder === false) {
       return false;
     }
-    return handleMessage(this.children, remainder);
+    return processMessage(this.children, remainder);
   },
 };
 
@@ -75,34 +78,41 @@ const matchAndRunChildHandlers = {
 // handle messages!
 // ================
 
+import chalk from 'chalk';
+function log(color, prefix, message) {
+  message = message.replace(/(\n)/g, `$1${' '.repeat(prefix.length + 1)}`);
+  console.log(chalk[color](`${prefix} ${message}`));
+}
+
 function header(message) {
-  console.log(`\n${message}`);
+  log('cyan', '\n=====', message);
 }
 
 function simulate(messageHandler, message) {
-  console.log('[In]', message);
+  log('magenta', '\n[In] ', message);
   return processMessage(messageHandler, message).then(response => {
-    if (response === false) {
-      console.log('-');
-    }
-    else {
-      console.log('[Out]', response);
-    }
+    const text = response !== false ? response : '-';
+    log('green', '[Out]', text);
   });
 }
+
 
 Promise.mapSeries([
   () => header('alwaysRespond'),
   () => simulate(alwaysRespond, 'hello'),
   () => simulate(alwaysRespond, 'world'),
+
   () => header('sometimesRespond'),
   () => simulate(sometimesRespond, 'hello'),
   () => simulate(sometimesRespond, 'lol world'),
+
   () => header('multipleResponders'),
   () => simulate(multipleResponders, 'hello'),
   () => simulate(multipleResponders, 'lol world'),
+
   () => header('respondEventually'),
   () => simulate(respondEventually, ''),
+
   () => header('matchAndRunChildHandlers'),
   () => simulate(matchAndRunChildHandlers, 'not yo'),
   () => simulate(matchAndRunChildHandlers, 'yo'),
