@@ -60,7 +60,8 @@ export class SlackBot extends Bot {
     const meta = {
       bot: this,
       slack: this.slack,
-      message: origMessage,
+      message,
+      origMessage,
       channel,
       user,
     };
