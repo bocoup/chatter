@@ -66,8 +66,8 @@ export class SlackBot extends Bot {
     };
   }
 
-  getMessageHandlerCacheId({message}) {
-    return message.channel;
+  getMessageHandlerCacheId(meta) {
+    return meta.message.channel;
   }
 
   onOpen() {
