@@ -14,8 +14,8 @@ import {
 
 // Respond to a message starting with "parse", then return response with the
 // parsed args.
-const parseHandler = createMatcher({match: 'parse'}, createParser(({remain}, {user}) => {
-  return `Parse received <${remain.join('> <')}> from ${user}.`;
+const parseHandler = createMatcher({match: 'parse'}, createParser(({args}, {user}) => {
+  return `Parse received <${args.join('> <')}> from ${user}.`;
 }));
 
 // Respond to a message starting with "message", then return response with

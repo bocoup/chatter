@@ -51,20 +51,20 @@ describe('message-handler/parser', function() {
         return Promise.all([
           expect(parser.handleMessage('foo bar', 1, 2)).to.become({
             args: {
-              input: 'foo bar',
+              text: 'foo bar',
               errors: [],
               options: {},
-              remain: ['foo', 'bar'],
+              args: ['foo', 'bar'],
             },
             a: 1,
             b: 2,
           }),
           expect(parser.handleMessage('foo bar x=1 y=2 z=3 baz', 1, 2)).to.become({
             args: {
-              input: 'foo bar x=1 y=2 z=3 baz',
+              text: 'foo bar x=1 y=2 z=3 baz',
               errors: [],
               options: {xxx: '1', yyy: 2, zzz: true},
-              remain: ['foo', 'bar', 'baz'],
+              args: ['foo', 'bar', 'baz'],
             },
             a: 1,
             b: 2,

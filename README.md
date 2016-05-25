@@ -336,9 +336,9 @@ const parsingHandler = createParser(function(parsed) {
 
 processMessage(parsingHandler, 'foo bar baz')
 // { options: {},
-//   remain: [ 'foo', 'bar', 'baz' ],
+//   args: [ 'foo', 'bar', 'baz' ],
 //   errors: [],
-//   input: 'foo bar baz' }
+//   message: 'foo bar baz' }
 ```
 
 However, `createParser` is most useful when used in conjunction with
@@ -346,8 +346,8 @@ However, `createParser` is most useful when used in conjunction with
 
 ```js
 const addMatcher = createMatcher({match: 'add'}, createParser(function(parsed) {
-  const result = parsed.remain.reduce((sum, num) => sum + Number(num), 0);
-  return `${parsed.remain.join(' + ')} = ${result}`;
+  const result = parsed.args.reduce((sum, num) => sum + Number(num), 0);
+  return `${parsed.args.join(' + ')} = ${result}`;
 }));
 
 processMessage(addMatcher, 'add 3 4 5')  // Promise -> 3 + 4 + 5 = 12
@@ -374,8 +374,8 @@ const addCommand = createCommand({
   description: 'Adds some numbers.',
   usage: 'number [ number [ number ... ] ]',
 }, createParser(function(parsed) {
-  const result = parsed.remain.reduce((sum, n) => sum + Number(n), 0);
-  return `${parsed.remain.join(' + ')} = ${result}`;
+  const result = parsed.args.reduce((sum, n) => sum + Number(n), 0);
+  return `${parsed.args.join(' + ')} = ${result}`;
 }));
 
 const multiplyCommand = createCommand({
@@ -383,8 +383,8 @@ const multiplyCommand = createCommand({
   description: 'Multiplies some numbers.',
   usage: 'number [ number [ number ... ] ]',
 }, createParser(function(parsed) {
-  const result = parsed.remain.reduce((product, n) => product * Number(n), 1);
-  return `${parsed.remain.join(' x ')} = ${result}`;
+  const result = parsed.args.reduce((product, n) => product * Number(n), 1);
+  return `${parsed.args.join(' x ')} = ${result}`;
 }));
 
 const rootCommand = createCommand({

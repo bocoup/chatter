@@ -64,15 +64,15 @@ const addCommand = createCommand({
   name: 'add',
   description: 'Adds some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function({remain, input}) {
-  if (!input) {
+}, createParser(function({args, message}) {
+  if (!message) {
     return false;
   }
-  const result = remain.reduce((sum, n) => sum + Number(n), 0);
+  const result = args.reduce((sum, n) => sum + Number(n), 0);
   if (isNaN(result)) {
     return `Whoops! Are you sure those were all numbers?`;
   }
-  return `${remain.join(' + ')} = ${result}`;
+  return `${args.join(' + ')} = ${result}`;
 }));
 
 
@@ -81,15 +81,15 @@ const multiplyCommand = createCommand({
   name: 'multiply',
   description: 'Multiplies some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function({remain, input}) {
-  if (!input) {
+}, createParser(function({args, message}) {
+  if (!message) {
     return false;
   }
-  const result = remain.reduce((product, n) => product * Number(n), 1);
+  const result = args.reduce((product, n) => product * Number(n), 1);
   if (isNaN(result)) {
     return `Whoops! Are you sure those were all numbers?`;
   }
-  return `${remain.join(' x ')} = ${result}`;
+  return `${args.join(' x ')} = ${result}`;
 }));
 
 // Math commands.

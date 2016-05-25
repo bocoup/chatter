@@ -9,8 +9,8 @@ const parsingHandler = createParser(function(parsed) {
 });
 
 const addHandler = createMatcher({match: 'add'}, createParser(function(parsed) {
-  const result = parsed.remain.reduce((sum, num) => sum + Number(num), 0);
-  return `${parsed.remain.join(' + ')} = ${result}`;
+  const result = parsed.args.reduce((sum, num) => sum + Number(num), 0);
+  return `${parsed.args.join(' + ')} = ${result}`;
 }));
 
 // ================

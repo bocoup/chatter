@@ -121,8 +121,8 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
       name: 'help',
       description: 'Get help for the specified command.',
       usage: '<command>',
-      handleMessage: createParser(({remain}) => {
-        const search = remain.join(' ');
+      handleMessage: createParser(({args}) => {
+        const search = args.join(' ');
         const {command, subCommandName, prefix, exact} = this.getMatchingSubCommand(search);
         return command.helpInfo(search, subCommandName, prefix, exact);
       }),

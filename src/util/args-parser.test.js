@@ -11,7 +11,7 @@ describe('util/args-parser', function() {
     it('should use an input array as-is', function() {
       expect(parseArgs(['a', 'b', 'c'])).to.deep.equal({
         options: {},
-        remain: ['a', 'b', 'c'],
+        args: ['a', 'b', 'c'],
         errors: [],
       });
     });
@@ -25,78 +25,78 @@ describe('util/args-parser', function() {
     it('should split an input string on space', function() {
       expect(parseArgs('a b c')).to.deep.equal({
         options: {},
-        remain: ['a', 'b', 'c'],
+        args: ['a', 'b', 'c'],
         errors: [],
       });
     });
 
     it('should properly handle quoted args', function() {
       // single quotes
-      expect(parseArgs(`'a b c'`).remain).to.deep.equal([`a b c`]);
-      expect(parseArgs(`'a' b c`).remain).to.deep.equal([`a`, `b`, `c`]);
-      expect(parseArgs(`a 'b' c`).remain).to.deep.equal([`a`, `b`, `c`]);
-      expect(parseArgs(`a b 'c'`).remain).to.deep.equal([`a`, `b`, `c`]);
-      expect(parseArgs(`'a b c'`).remain).to.deep.equal([`a b c`]);
-      expect(parseArgs(`'a b' c`).remain).to.deep.equal([`a b`, `c`]);
-      expect(parseArgs(`a 'b c'`).remain).to.deep.equal([`a`, `b c`]);
+      expect(parseArgs(`'a b c'`).args).to.deep.equal([`a b c`]);
+      expect(parseArgs(`'a' b c`).args).to.deep.equal([`a`, `b`, `c`]);
+      expect(parseArgs(`a 'b' c`).args).to.deep.equal([`a`, `b`, `c`]);
+      expect(parseArgs(`a b 'c'`).args).to.deep.equal([`a`, `b`, `c`]);
+      expect(parseArgs(`'a b c'`).args).to.deep.equal([`a b c`]);
+      expect(parseArgs(`'a b' c`).args).to.deep.equal([`a b`, `c`]);
+      expect(parseArgs(`a 'b c'`).args).to.deep.equal([`a`, `b c`]);
       // double quotes
-      expect(parseArgs(`"a b c"`).remain).to.deep.equal([`a b c`]);
-      expect(parseArgs(`"a" b c`).remain).to.deep.equal([`a`, `b`, `c`]);
-      expect(parseArgs(`a "b" c`).remain).to.deep.equal([`a`, `b`, `c`]);
-      expect(parseArgs(`a b "c"`).remain).to.deep.equal([`a`, `b`, `c`]);
-      expect(parseArgs(`"a b c"`).remain).to.deep.equal([`a b c`]);
-      expect(parseArgs(`"a b" c`).remain).to.deep.equal([`a b`, `c`]);
-      expect(parseArgs(`a "b c"`).remain).to.deep.equal([`a`, `b c`]);
+      expect(parseArgs(`"a b c"`).args).to.deep.equal([`a b c`]);
+      expect(parseArgs(`"a" b c`).args).to.deep.equal([`a`, `b`, `c`]);
+      expect(parseArgs(`a "b" c`).args).to.deep.equal([`a`, `b`, `c`]);
+      expect(parseArgs(`a b "c"`).args).to.deep.equal([`a`, `b`, `c`]);
+      expect(parseArgs(`"a b c"`).args).to.deep.equal([`a b c`]);
+      expect(parseArgs(`"a b" c`).args).to.deep.equal([`a b`, `c`]);
+      expect(parseArgs(`a "b c"`).args).to.deep.equal([`a`, `b c`]);
       // nested quotes
-      expect(parseArgs(`"'a b c'"`).remain).to.deep.equal([`'a b c'`]);
-      expect(parseArgs(`"a 'b' c"`).remain).to.deep.equal([`a 'b' c`]);
-      expect(parseArgs(`"a 'b c"`).remain).to.deep.equal([`a 'b c`]);
-      expect(parseArgs(`"'a b" "'c'"`).remain).to.deep.equal([`'a b`, `'c'`]);
-      expect(parseArgs(`'"a b c"'`).remain).to.deep.equal([`"a b c"`]);
-      expect(parseArgs(`'a "b" c'`).remain).to.deep.equal([`a "b" c`]);
-      expect(parseArgs(`'a "b c'`).remain).to.deep.equal([`a "b c`]);
-      expect(parseArgs(`'"a b' '"c"'`).remain).to.deep.equal([`"a b`, `"c"`]);
+      expect(parseArgs(`"'a b c'"`).args).to.deep.equal([`'a b c'`]);
+      expect(parseArgs(`"a 'b' c"`).args).to.deep.equal([`a 'b' c`]);
+      expect(parseArgs(`"a 'b c"`).args).to.deep.equal([`a 'b c`]);
+      expect(parseArgs(`"'a b" "'c'"`).args).to.deep.equal([`'a b`, `'c'`]);
+      expect(parseArgs(`'"a b c"'`).args).to.deep.equal([`"a b c"`]);
+      expect(parseArgs(`'a "b" c'`).args).to.deep.equal([`a "b" c`]);
+      expect(parseArgs(`'a "b c'`).args).to.deep.equal([`a "b c`]);
+      expect(parseArgs(`'"a b' '"c"'`).args).to.deep.equal([`"a b`, `"c"`]);
     });
 
     it('should ignore extra spaces', function() {
-      expect(parseArgs(' a b  c   d    ').remain).to.deep.equal(['a', 'b', 'c', 'd']);
-      expect(parseArgs('a   b  c d').remain).to.deep.equal(['a', 'b', 'c', 'd']);
+      expect(parseArgs(' a b  c   d    ').args).to.deep.equal(['a', 'b', 'c', 'd']);
+      expect(parseArgs('a   b  c d').args).to.deep.equal(['a', 'b', 'c', 'd']);
     });
 
     it('should properly parse options', function() {
       const validProps = {foo: String, bar: Boolean, baz: Number};
-      let options, remain;
-      ({options, remain} = parseArgs(`a b c d foo=1 bar=1 baz=1`, validProps));
+      let options, args;
+      ({options, args} = parseArgs(`a b c d foo=1 bar=1 baz=1`, validProps));
       expect(options).to.deep.equal({foo: `1`, bar: true, baz: 1});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`a foo=1 b bar=1 c baz=1 d`, validProps));
+      ({options, args} = parseArgs(`a foo=1 b bar=1 c baz=1 d`, validProps));
       expect(options).to.deep.equal({foo: `1`, bar: true, baz: 1});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`bar=1 a baz=1 b c foo=1 d`, validProps));
+      ({options, args} = parseArgs(`bar=1 a baz=1 b c foo=1 d`, validProps));
       expect(options).to.deep.equal({foo: `1`, bar: true, baz: 1});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`a b c d Foo=1 bAr=1 baZ=1`, validProps));
+      ({options, args} = parseArgs(`a b c d Foo=1 bAr=1 baZ=1`, validProps));
       expect(options).to.deep.equal({foo: `1`, bar: true, baz: 1});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`a b c d foo="" bar="" baz=""`, validProps));
+      ({options, args} = parseArgs(`a b c d foo="" bar="" baz=""`, validProps));
       expect(options).to.deep.equal({foo: ``, bar: false, baz: 0});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`a b c d foo=" " bar=" " baz=" "`, validProps));
+      ({options, args} = parseArgs(`a b c d foo=" " bar=" " baz=" "`, validProps));
       expect(options).to.deep.equal({foo: ` `, bar: true, baz: 0});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`a b c d foo=" a  b   " bar=" c " baz="  123  "`, validProps));
+      ({options, args} = parseArgs(`a b c d foo=" a  b   " bar=" c " baz="  123  "`, validProps));
       expect(options).to.deep.equal({foo: ` a  b   `, bar: true, baz: 123});
-      expect(remain).to.deep.equal([`a`, `b`, `c`, `d`]);
+      expect(args).to.deep.equal([`a`, `b`, `c`, `d`]);
 
-      ({options, remain} = parseArgs(`a foo="1 'b'" bar='1 c' baz="1 d" e`, validProps));
+      ({options, args} = parseArgs(`a foo="1 'b'" bar='1 c' baz="1 d" e`, validProps));
       expect(options).to.deep.equal({foo: `1 'b'`, bar: true, baz: NaN});
-      expect(remain).to.deep.equal([`a`, `e`]);
+      expect(args).to.deep.equal([`a`, `e`]);
     });
 
     it('should complain about unknown options', function() {
@@ -146,7 +146,7 @@ describe('util/args-parser', function() {
             aaa: 123,
             bbb: `x y z = 456`,
           },
-          remain: [`foo`, `bar baz`, `can't wait`],
+          args: [`foo`, `bar baz`, `can't wait`],
           errors: [],
         });
       expect(parseArgs(` foo  'bar   baz'  a=123  b="x  y  z  =  456"  "can't  wait" `, {aaa: Number, bbb: String}))
@@ -155,7 +155,7 @@ describe('util/args-parser', function() {
             aaa: 123,
             bbb: `x  y  z  =  456`,
           },
-          remain: [`foo`, `bar   baz`, `can't  wait`],
+          args: [`foo`, `bar   baz`, `can't  wait`],
           errors: [],
         });
     });

@@ -4,7 +4,7 @@
 // parseArgs(`foo 'bar baz' a=123 b="x y z = 456" "can't wait"`, {aaa: Number, bbb: String})
 // Returns:
 // { options: { aaa: 123, bbb: 'x y z = 456' },
-//   remain: [ 'foo', 'bar baz', 'can\'t wait' ],
+//   args: [ 'foo', 'bar baz', 'can\'t wait' ],
 //   errors: [] }
 export function parseArgs(args, validProps = {}) {
   const options = {};
@@ -75,7 +75,7 @@ export function parseArgs(args, validProps = {}) {
 
   return {
     options,
-    remain,
+    args: remain,
     errors,
   };
 }

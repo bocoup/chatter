@@ -12,7 +12,7 @@ export class ParsingMessageHandler extends DelegatingMessageHandler {
   // into the specified handleMessage function.
   handleMessage(message = '', ...args) {
     const parsed = parseArgs(message, this.parseOptions);
-    parsed.input = message;
+    parsed.text = message;
     return super.handleMessage(parsed, ...args);
   }
 
