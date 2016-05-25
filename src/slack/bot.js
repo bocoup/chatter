@@ -33,15 +33,10 @@ export class SlackBot extends Bot {
     });
   }
 
-  ignoreMessage(message) {
-    return message.subtype === 'bot_message';
-  }
-
-  getMessageHandlerCacheId({message}) {
-    return message.channel;
-  }
-
   getMessageHandlerArgs(message) {
+    if (message.subtype === 'bot_message') {
+      return false;
+    }
     const origMessage = message;
     const channel = this.slack.rtmClient.dataStore.getChannelGroupOrDMById(message.channel);
     // Ignore non-message messages.
@@ -69,6 +64,10 @@ export class SlackBot extends Bot {
       text: message.text,
       args: [meta],
     };
+  }
+
+  getMessageHandlerCacheId({message}) {
+    return message.channel;
   }
 
   onOpen() {

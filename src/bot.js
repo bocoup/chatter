@@ -31,9 +31,6 @@ export class Bot {
   }
 
   onMessage(message) {
-    if (this.ignoreMessage(message)) {
-      return Promise.resolve();
-    }
     return Promise.try(() => {
       const messageHandlerArgs = this.getMessageHandlerArgs(message);
       if (messageHandlerArgs === false) {
@@ -54,8 +51,11 @@ export class Bot {
     .catch(error => this.handleError(message, error));
   }
 
-  ignoreMessage(message) {
-    return false;
+  getMessageHandlerArgs(message) {
+    return {
+      text: message.text,
+      args: [message],
+    };
   }
 
   getMessageHandlerCacheId(message) {
@@ -74,13 +74,6 @@ export class Bot {
       this.handlerMap[id] = messageHandler;
     }
     return messageHandler;
-  }
-
-  getMessageHandlerArgs(message) {
-    return {
-      text: message.text,
-      args: [message],
-    };
   }
 
   handleResponse(message, response) {
