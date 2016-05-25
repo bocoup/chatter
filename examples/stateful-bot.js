@@ -1,19 +1,33 @@
+// If this syntax looks unfamiliar, don't worry, it's just JavaScript!
+// Learn more about ES2015 here: https://babeljs.io/docs/learn-es2015/
+//
 // Run "npm install" and then test with this command in your shell:
-// npm run babel examples/stateful-bot.js
+// node examples/stateful-bot.js
 
-import {
-  createBot,
-  createCommand,
-  createArgsAdjuster,
-} from '../src';
+'use strict'; // eslint-disable-line strict
 
-// ===========
-// timer class
-// ===========
+const Promise = require('bluebird');
+const chalk = require('chalk');
+
+// ES2015 syntax:
+//   import {createBot, createCommand, createArgsAdjuster} from 'chatter';
+// ES5 syntax:
+//   const chatter = require('chatter');
+const chatter = require('../lib');
+const createBot = chatter.createBot;
+const createCommand = chatter.createCommand;
+const createArgsAdjuster = chatter.createArgsAdjuster;
+
+// ===================
+// timer utility class
+// ===================
 
 class Timer {
+  constructor() {
+    this.startTime = null;
+  }
   wasStarted() {
-    return 'startTime' in this;
+    return Boolean(this.startTime);
   }
   start() {
     this.startTime = new Date();
@@ -22,15 +36,15 @@ class Timer {
     if (!this.startTime) {
       return 'Timer not yet started.';
     }
-    const diff = new Date((new Date() - this.startTime))
+    const diff = new Date((new Date() - this.startTime));
     const elapsed = diff.toISOString().slice(11, 19);
     return `Elapsed time: ${elapsed}.`;
   }
 }
 
-// ========================
-// message handler creators
-// ========================
+// ================
+// message handlers
+// ================
 
 const startHandler = createCommand({
   name: 'start',
@@ -57,11 +71,11 @@ const myBot = createBot({
   // receives the id returned by getMessageHandlerCacheId, which can be used to
   // programatically return a different message handler.
   createMessageHandler(id) {
-    // Create a new instance of our Timer class.
+    // Create a new instance of the Timer class.
     const timer = new Timer();
     // Create a message handler that first adjusts the args received from the
     // bot to include the timer instance, then calls the command message handler
-    // with the adjusted arguments. While we're not using the original "message"
+    // with the adjusted arguments. While we're not using the original message
     // object in our message handlers, it's included for completeness' sake.
     const messageHandler = createArgsAdjuster({
       adjustArgs(text, message) {
@@ -69,7 +83,7 @@ const myBot = createBot({
       },
     }, createCommand({
       isParent: true,
-      description: 'A useful timer.'
+      description: 'Your own personal timer.',
     }, [
       startHandler,
       elapsedHandler,
@@ -100,8 +114,7 @@ const myBot = createBot({
 // simulate the bot interacting with a user
 // ========================================
 
-import chalk from 'chalk';
-const colorMap = {cowboy: 'magenta', joe: 'yellow'}
+const colorMap = {cowboy: 'magenta', joe: 'yellow'};
 
 function simulate(user, text) {
   // Display the user message.
@@ -110,7 +123,7 @@ function simulate(user, text) {
   const message = {user, text};
   // Normally, this would be run when a message event is received from a chat
   // service, but in this case we'll call it manually.
-  return myBot.onMessage(message).then(() => Promise.delay(1000))
+  return myBot.onMessage(message).then(() => Promise.delay(1000));
 }
 
 // Simulate a series of messages, in order. Note that multiple users can talk
@@ -119,11 +132,10 @@ function simulate(user, text) {
 // getMessageHandlerCacheId function). If both users were both talking in a
 // shared channel and the channel name was used as the cache id, the results
 // would be very different.
-import Promise from 'bluebird';
 Promise.mapSeries([
   () => simulate('cowboy', 'hello'),
-  () => simulate('cowboy', 'elapsed'),
   () => simulate('cowboy', 'help'),
+  () => simulate('cowboy', 'elapsed'),
   () => simulate('cowboy', 'start'),
   () => simulate('cowboy', 'elapsed'),
   () => simulate('joe', 'start'),

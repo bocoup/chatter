@@ -6,35 +6,20 @@
 [![Build Status](https://travis-ci.org/bocoup/chatter.svg?branch=master)](https://travis-ci.org/bocoup/chatter)
 [![Built with Grunt](https://cdn.gruntjs.com/builtwith.svg)](http://gruntjs.com/)
 
-## Examples
-
-This project and all examples are written for nodejs in ES2015, using babel.
-Ensure you have [nodejs & npm] installed and run `npm install` before running
-any of the following examples:
-
-* [message-handlers](./examples/message-handlers.js) - Shows how [message
-  handlers] and the [processMessage function] work, abstractly.
-* [conversation](./examples/conversation.js) - Shows how "conversations" work
-  using the abstract [Bot] along with [message handlers] and the [processMessage
-  function].
-* [slack-basic](./examples/slack-basic.js) - A naive Slack bot that uses
-  [message handlers] and the [processMessage function].
-* [slack](./examples/slack.js) - A more robust Slack bot that uses [SlackBot]
-  and [Commands].
-
-[message handlers]: #message-handlers
-[processMessage function]: #processing-messages
-[Bot]: #Bot
-[SlackBot]: #SlackBot
-[Commands]: #Commands
 [normalizeMessage]: #normalizeMessage
-
-See the comment at the top of each example file for instructions on how to
-run that example.
-
-[nodejs & npm]: https://nodejs.org/en/download/
+[node]: https://nodejs.org/en/download/
 
 ## Usage
+
+```
+npm install --save chatter
+```
+
+Tested in [Node][node] 4.x and 6.x.
+
+_Note: If the following code example syntax looks unfamiliar, don't worry, it's
+just JavaScript! Read [a detailed overview of ECMAScript 2015
+features](https://babeljs.io/docs/learn-es2015/) to learn more._
 
 ### What is a bot?
 
@@ -47,13 +32,13 @@ The most basic bot looks something like this (note, this is pseudocode):
 
 ```js
 // Import the chat service's bot library.
-import ServiceBot from 'service-bot';
+const ServiceBot = require('service-bot');
 
 // Create the bot with the relevant options.
 const myBot = new ServiceBot(options);
 
 // When the bot receives a message that it cares about, respond to it.
-myBot.on('message', function(message) {
+myBot.on('message', message => {
   // This is the code you'll spend most of your time writing:
   if (doICareAbout(message)) {
     myBot.send(response);
@@ -65,8 +50,8 @@ myBot.connect();
 ```
 
 Usually, all the behind-the-scenes work of connecting the bot to the remote
-service, handling reconnections, keeping track of state (what users is the bot
-currently talking to, what channels is the bot currently in) is done by a
+service, handling reconnections, keeping track of state (what users the bot is
+currently talking to, what channels the bot is currently in) is done by a
 service-specific library.
 
 So, what's left to do? Well, as shown in the previous example, you'll need
@@ -77,7 +62,7 @@ This project aims to help with all that.
 
 ### Message handlers
 
-Since most bot code is made up of these two steps:
+Since most bot code is centered around these two steps:
 
 1. Testing an incoming message to see if it should be handled
 2. Sending a response based on the incoming message
@@ -90,7 +75,7 @@ returns a response if it should respond, or `false` if it doesn't care about
 that message:
 
 ```js
-const lolHandler = function(message) {
+const lolHandler = message => {
   if (/lol/i.test(message)) {
     const newMessage = message.replace(/lol/ig, 'laugh out loud');
     return `More like "${newMessage}" amirite`;
@@ -106,18 +91,18 @@ But what if a message handler needs to yield a response asynchronously, instead
 of returning a value immediately? It can, by returning a Promise:
 
 ```js
-const stuffHandler = function(message) {
-  if (message !== 'show me the stuff') {
-    return false;
+const stuffHandler = message => {
+  if (message === 'get stuff') {
+    return db.query('SELECT * FROM STUFF').then(results => {
+      const stuff = results.join(', ');
+      return `Look at all the stuff: ${stuff}`;
+    });
   }
-  return db.query('SELECT * FROM STUFF').then(function(results) {
-    const stuff = results.join(', ');
-    return `Look at all the stuff! ${stuff}`;
-  });
+  return false;
 };
 
-stuffHandler('huh')               // false
-stuffHandler('show me the stuff') // Promise -> 'Look at all the stuff! ...'
+stuffHandler('huh')       // false
+stuffHandler('get stuff') // Promise -> 'Look at all the stuff! ...'
 ```
 
 But what do you do if you want to pass all messages through both `lolHandler`
@@ -127,42 +112,45 @@ types of message in a dozen different ways?
 Just create an array of message handlers:
 
 ```js
-const botHandlers = [
+const messageHandlers = [
   lolHandler,
   stuffHandler,
 ];
 ```
 
-But, wait. If you've been paying attention, you've realized that these things
-behave quite differently. Without a helper function that knows how to iterate
-over that array, or wait for promises to resolve, or both of those things, this
-won't make your job any easier.
+Now, you've undoubtedly realized that functions that return values or promises
+and arrays behave quite differently. Without a helper function that knows how to
+iterate over that array, or wait for a promise to resolve, or both of those
+things, this won't make your job any easier.
 
-Fortunately, we've given you that helper function.
+Fortunately, chatter gives you that helper function.
 
 ### Processing messages
 
-This module exports a `processMessage` function that takes two arguments:
+The `processMessage` function (that chatter exports) takes two arguments:
 
 1. A message handler
 2. A message
 
-It understands that a message handler might be a function or an array of
-functions like the ones described above (or a few other possible things, which
-will be explained later).
+This function understands that a message handler might be a function or an
+array of functions like the ones described above (or a few other possible
+things, which will be explained later).
 
 It takes the message handler and message you give it and intelligently processes
 them to produce a response (if any), and it returns a Promise that will be
 resolved with that response:
 
 ```js
-processMessage(botHandlers, message).then(function(response) {
+const processMessage = require('chatter').processMessage;
+
+// (See the previous examples for the definition of "messageHandlers")
+processMessage(messageHandlers, message).then(response => {
   // do something with response
 });
 
 // An example:
-function test(message) {
-  processMessage(botHandlers, message).then(function(response) {
+function simulate(message) {
+  processMessage(messageHandlers, message).then(response => {
     if (response === false) {
       response = `Sorry, I don't understand "${message}".`;
     }
@@ -170,9 +158,9 @@ function test(message) {
   });
 }
 
-test('lol what')          // logs: More like "laugh out loud what" amirite
-test('show me the stuff') // logs: Look at all the stuff! ...
-test('huh')               // logs: Sorry, I don't understand "huh".
+simulate('lol what') // Logs: More like "laugh out loud what" amirite
+simulate('getstuff') // Logs: Look at all the stuff! ...
+simulate('huh')      // Logs: Sorry, I don't understand "huh".
 ```
 
 Of course, instead of logging the response, your bot would be sending it back to
@@ -186,7 +174,7 @@ a function, an object with a `handleMessage` method, or an array of any
 combination of those things. That array may contain other arrays.
 
 ```js
-const functionMessageHandler = function(message) {
+const functionMessageHandler = message => {
   if (condition) {
     return response;
   }
@@ -251,13 +239,13 @@ helper function:
 
 ```js
 // Import the chat service's bot library.
-import ServiceBot from 'service-bot';
+const ServiceBot = require('service-bot');
 
-// Import the processMessage helper function.
-import {processMessage} from 'chatter';
+// Import the chatter processMessage helper function.
+const processMessage = require('chatter').processMessage;
 
 // Define your message handlers.
-const botHandlers = [...];
+const messageHandlers = [...];
 
 // Create the bot with the relevant options.
 const myBot = new ServiceBot(options);
@@ -265,7 +253,7 @@ const myBot = new ServiceBot(options);
 // When the bot receives a message that it cares about, respond to it.
 myBot.on('message', function(message) {
   // Things just got a lot easier.
-  processMessage(botHandlers, message).then(function(response) {
+  processMessage(messageHandlers, message).then(response => {
     if (response === false) {
       response = `Sorry, I don't understand "${message}".`;
     }
@@ -279,12 +267,9 @@ myBot.connect();
 
 ### Additional included message handlers
 
-Because there are a number of common behaviors a message handler might exhibit,
-a few message handler "creator" functions have been included to make creating
-common message handlers easier for you.
-
-Each of the following functions share the same signature, which is:
-`creatorFunction([options, ] messageHandler)`.
+Because there are a number of common things message handlers need to do, a few
+message handler "creator" functions have been included to make creating common
+message handlers easier.
 
 #### createMatcher
 
@@ -295,30 +280,36 @@ is specified, it matches the beginning of the message. If a message is matched,
 the remainder of the message will be passed into the specified message handler:
 
 ```js
-const addMatcher = createMatcher({match: 'add'}, function(message) {
+const createMatcher = require('chatter').createMatcher;
+
+// Matches "add" prefix, then splits the message into an array and adds the
+// array items into a sum.
+const addMatcher = createMatcher({match: 'add'}, message => {
   const numbers = message.split(' ');
-  const result = numbers.reduce((sum, num) => sum + Number(num), 0);
+  const result = numbers.reduce((sum, n) => sum + Number(n), 0);
   return `${numbers.join(' + ')} = ${result}`;
 });
 
-const multMatcher = createMatcher({match: 'mult'}, function(message) {
+// Matches "multiply" prefix, then splits the message into an array and
+// multiplies the array items into a product.
+const multiplyMatcher = createMatcher({match: 'mult'}, message => {
   const numbers = message.split(' ');
-  const result = numbers.reduce((sum, num) => sum * Number(num), 1);
+  const result = numbers.reduce((product, n) => product * Number(n), 1);
   return `${numbers.join(' x ')} = ${result}`;
 });
 
+// Parent message handler that "namespaces" its sub-handlers and provides a
+// fallback message if a sub-handler isn't matched.
 const mathMatcher = createMatcher({match: 'math'}, [
   addMatcher,
-  multMatcher,
-  function(message) {
-    return `Sorry, I don't understand "${message}".`;
-  },
+  multiplyMatcher,
+  message => `Sorry, I don't understand "${message}".`,
 ]);
 
+processMessage(mathMatcher, 'add 3 4 5')       // Promise -> false
 processMessage(mathMatcher, 'math add 3 4 5')  // Promise -> 3 + 4 + 5 = 12
 processMessage(mathMatcher, 'math mult 3 4 5') // Promise -> 3 x 4 x 5 = 60
 processMessage(mathMatcher, 'math sub 3 4 5')  // Promise -> Sorry, I don't understand "sub 3 4 5".
-processMessage(mathMatcher, 'hello world')     // Promise -> false
 ```
 
 See the [create-matcher](examples/create-matcher.js) example.
@@ -327,30 +318,21 @@ See the [create-matcher](examples/create-matcher.js) example.
 
 The `createParser` function creates a new message handler that calls the
 specified message handler, not with a message string, but with an object
-representing the "parsed" message.
+representing the "parsed" message. This is especially useful if you want to
+work with an array of words from the message, instead of just a string message.
 
 ```js
-const parsingHandler = createParser(function(parsed) {
-  console.log(parsed);
+const createParser = require('chatter').createParser;
+
+// Reduce the array of parsed args into a sum.
+const addHandler = createParser(parsed => {
+  const args = parsed.args;
+  const result = args.reduce((sum, num) => sum + Number(num), 0);
+  return `${args.join(' + ')} = ${result}`;
 });
 
-processMessage(parsingHandler, 'foo bar baz')
-// { options: {},
-//   args: [ 'foo', 'bar', 'baz' ],
-//   errors: [],
-//   message: 'foo bar baz' }
-```
-
-However, `createParser` is most useful when used in conjunction with
-`createMatcher` (see the previous `addMatcher` example):
-
-```js
-const addMatcher = createMatcher({match: 'add'}, createParser(function(parsed) {
-  const result = parsed.args.reduce((sum, num) => sum + Number(num), 0);
-  return `${parsed.args.join(' + ')} = ${result}`;
-}));
-
-processMessage(addMatcher, 'add 3 4 5')  // Promise -> 3 + 4 + 5 = 12
+processMessage(addHandler, '1 2 3')    // Promise -> 1 + 2 + 3 = 6
+processMessage(addHandler, '4 five 6') // Promise -> 4 + five + 6 = NaN
 ```
 
 See the [create-parser](examples/create-parser.js) example.
@@ -359,34 +341,43 @@ See the [create-parser](examples/create-parser.js) example.
 
 The `createCommand` function is meant to be used to create a nested tree of
 message handlers that each have a name, description and usage information.
+
 Like with the `createMatcher` `match` option, the `name` will be used to match
 the message, with the remainder of the message being passed into the specified
 message handler. The `name`, `description` and `usage` options will be used to
-display contextual help and usage information.
+display contextual help and usage information, via an automatically-created
+top-level 'help' command and a fallback message handler.
 
 Note that the response from message handlers created with `createCommand` may
 return arrays, and should be normalized into a newline-joined string with the
 included [normalizeMessage] helper function.
 
 ```js
+const createCommand = require('chatter').createCommand;
+
+// Command that adds args into a sum.
 const addCommand = createCommand({
   name: 'add',
   description: 'Adds some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function(parsed) {
-  const result = parsed.args.reduce((sum, n) => sum + Number(n), 0);
-  return `${parsed.args.join(' + ')} = ${result}`;
+}, createParser(parsed => {
+  const args = parsed.args;
+  const result = args.reduce((sum, n) => sum + Number(n), 0);
+  return `${args.join(' + ')} = ${result}`;
 }));
 
+// Command that multiplies args into a product.
 const multiplyCommand = createCommand({
   name: 'multiply',
   description: 'Multiplies some numbers.',
   usage: 'number [ number [ number ... ] ]',
-}, createParser(function(parsed) {
-  const result = parsed.args.reduce((product, n) => product * Number(n), 1);
-  return `${parsed.args.join(' x ')} = ${result}`;
+}, createParser(parsed => {
+  const args = parsed.args;
+  const result = args.reduce((product, n) => product * Number(n), 1);
+  return `${args.join(' x ')} = ${result}`;
 }));
 
+// Parent command that provides a "help" command and fallback usage information.
 const rootCommand = createCommand({
   isParent: true,
   description: 'Some example math commands.',
@@ -395,99 +386,57 @@ const rootCommand = createCommand({
   multiplyCommand,
 ]);
 
-processMessage(rootCommand, 'hello');
+processMessage(rootCommand, 'hello').then(normalizeMessage);
 // Unknown command *hello*.
 // Try *help* for more information.
 
-processMessage(rootCommand, 'help');
+processMessage(rootCommand, 'help').then(normalizeMessage);
 // Some example math commands.
 // *Commands:*
 // > *add* - Adds some numbers.
 // > *multiply* - Multiplies some numbers.
 // > *help* - Get help for the specified command.
 
-processMessage(rootCommand, 'help add');
+processMessage(rootCommand, 'help add').then(normalizeMessage);
 // Adds some numbers.
 // Usage: `add number [ number [ number ... ] ]`
 
-processMessage(rootCommand, 'add 3 4 5');
+processMessage(rootCommand, 'add 3 4 5').then(normalizeMessage);
 // 3 + 4 + 5 = 12
 
-processMessage(rootCommand, 'multiply');
+processMessage(rootCommand, 'multiply').then(normalizeMessage);
 // Usage: `multiply number [ number [ number ... ] ]`
 // Or try *help multiply* for more information.
 
-processMessage(rootCommand, 'multiply 3 4 5');
+processMessage(rootCommand, 'multiply 3 4 5').then(normalizeMessage);
 // 3 x 4 x 5 = 60
 ```
 
 See the [create-command](examples/create-command.js) and
 [create-command-namespaced](examples/create-command-namespaced.js) examples.
 
-#### createArgsAdjuster
-
-The `createArgsAdjuster` function creates a new message handler that calls the
-specified message handler with a different set of arguments than the message
-handler received. This is especially useful when you need to pass state from
-where a parent message handler is created into a child message handler.
-
-```js
-const incrementCommand = createCommand({
-  name: 'increment',
-  description: 'Increment the counter and show it.',
-}, function(message, state) {
-  state.counter++;
-  return `The counter is now at ${state.counter}.`;
-});
-
-function getStatefulMessageHandler() {
-  const state = {counter: 0};
-  return createArgsAdjuster({
-    adjustArgs(message) {
-      return [message, state];
-    },
-  }, createCommand({
-    isParent: true,
-    description: 'An exciting command, for sure.',
-  }, [
-    incrementCommand,
-  ]));
-}
-const firstStatefulHandler = getStatefulMessageHandler();
-
-processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 1.
-processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 2.
-
-const secondStatefulHandler = getStatefulMessageHandler();
-
-processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is now at 1.
-processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 3.
-processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is now at 2.
-```
-
-See the [create-args-adjuster](examples/create-args-adjuster.js) and
-[stateful-bot](examples/stateful-bot.js) examples.
-
 #### createConversation
 
 The `createConversation` function creates a new message handler that calls the
 specified message handler, doing nothing of note until that message handler
-returns an object with a `dialog` property, which should be a NEW
+returns an object with a `dialog` property, which should be a new
 message handler. At that point, the new message handler is stored and used
 _instead of the originally-specified message handler_ to handle the next
 message. After that message, the message handler is reverted to the original,
-unless a new `dialog` is specified, in which case it is used instead.
+unless another `dialog` is specified, in which case that is used instead.
 
 Conversations can be used to create an interactive sequence of message handlers,
 and must be be cached on a per-conversation basis (usually per-channel or
 per-direct message), because of the need to keep track of the current dialog.
 
 ```js
-const helloHandler = function(message) {
+const createConveration = require('chatter').createConveration;
+
+const helloHandler = message => {
   return message.indexOf('hello') !== -1 ? 'Hello to you too!' : false;
 };
 
-const askHandler = createMatcher({match: 'ask'}, function() {
+const askHandler = createMatcher({match: 'ask'}, () => {
   return {
     message: 'Why do you want me to ask you a question?',
     dialog(message) {
@@ -496,14 +445,14 @@ const askHandler = createMatcher({match: 'ask'}, function() {
   };
 });
 
-const chooseHandler = createMatcher({match: 'choose'}, function() {
+const chooseHandler = createMatcher({match: 'choose'}, () => {
   return {
     message: `Choose one of the following: a, b or c.`,
     dialog: handleChoices,
   };
 });
 
-const handleChoices = function(choice) {
+const handleChoices = choice => {
   if (choice === 'a' || choice === 'b' || choice === 'c') {
     return `Thank you for choosing "${choice}".`;
   }
@@ -547,9 +496,58 @@ processMessage(conversationHandler, 'hello').then(handleResponse);
 // Hello to you too!
 ```
 
-See the [conversation](examples/conversation.js) example.
+See the [stateful-bot-conversation](examples/stateful-bot-conversation.js)
+example.
 
+#### createArgsAdjuster
 
+The `createArgsAdjuster` function creates a new message handler that calls the
+specified message handler with a different set of arguments than the message
+handler received. This is especially useful when you need to pass state from
+where a parent message handler is created into a child message handler.
+
+```js
+const createArgsAdjuster = require('chatter').createArgsAdjuster;
+
+// Increments the counter and returns a string decribing the new state.
+const incrementCommand = createCommand({
+  name: 'increment',
+  description: 'Increment the counter and show it.',
+}, (message, state) => {
+  state.counter++;
+  return `The counter is now at ${state.counter}.`;
+});
+
+// Returns a message handler that encapsualates some state, and passes that
+// state into child commands as an argument.
+function getStatefulMessageHandler() {
+  const state = {counter: 0};
+  return createArgsAdjuster({
+    adjustArgs(message) {
+      return [message, state];
+    },
+  }, createCommand({
+    isParent: true,
+    description: 'An exciting command, for sure.',
+  }, [
+    incrementCommand,
+  ]));
+}
+
+const firstStatefulHandler = getStatefulMessageHandler();
+
+processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 1.
+processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 2.
+
+const secondStatefulHandler = getStatefulMessageHandler();
+
+processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is now at 1.
+processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 3.
+processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is now at 2.
+```
+
+See the [create-args-adjuster](examples/create-args-adjuster.js) and
+[stateful-bot](examples/stateful-bot.js) examples.
 
 ### API
 
@@ -564,6 +562,8 @@ See the [conversation](examples/conversation.js) example.
 * `createDelegate` - function that returns an instance of `DelegatingMessageHandler`.
 * `MatchingMessageHandler` - 
 * `createMatcher` - function that returns an instance of `MatchingMessageHandler`.
+* `ArgsAdjustingMessageHandler` - 
+* `createArgsAdjuster` - function that returns an instance of `ArgsAdjustingMessageHandler`.
 * `ParsingMessageHandler` - 
 * `createParser` - function that returns an instance of `ParsingMessageHandler`.
 * `ConversingMessageHandler` - 
@@ -590,8 +590,8 @@ See the [conversation](examples/conversation.js) example.
 ### npm scripts
 
 This project and all examples are written for nodejs in ES2015, using babel.
-Ensure you have [nodejs & npm] installed and run `npm install` before running
-any of the following commands:
+Ensure you have [Node][node] 4.x or 6.x and Npm installed and run `npm install`
+before running any of the following commands:
 
 * `npm test` - Lints project code and runs tests.
 * `npm run build` - Builds project code from `src` into `lib` for publishing.
