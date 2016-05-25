@@ -1,6 +1,10 @@
 # chatter
+> A collection of useful primitives for creating interactive chat bots.
 
-A collection of useful primitives for creating interactive chat bots.
+[![NPM](https://nodei.co/npm/chatter.png)](https://nodei.co/npm/chatter/)
+
+[![Build Status](https://travis-ci.org/bocoup/chatter.svg?branch=master)](https://travis-ci.org/bocoup/chatter)
+[![Built with Grunt](https://cdn.gruntjs.com/builtwith.svg)](http://gruntjs.com/)
 
 ## Examples
 
