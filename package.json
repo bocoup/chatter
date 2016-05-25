@@ -1,6 +1,6 @@
 {
   "name": "chatter",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "A collection of useful primitives for creating interactive chat bots.",
   "main": "dist/index.js",
   "scripts": {
