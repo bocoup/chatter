@@ -4,6 +4,7 @@
 import {
   createBot,
   createCommand,
+  createArgsAdjuster,
 } from '../src';
 
 // ===========
@@ -31,25 +32,21 @@ class Timer {
 // message handler creators
 // ========================
 
-function getStartHandler(timer) {
-  return createCommand({
-    name: 'start',
-    description: 'Start or re-start the current timer.',
-  }, () => {
-    const wasStarted = timer.wasStarted();
-    timer.start();
-    return `Timer ${wasStarted ? 're-' : ''}started.`;
-  });
-}
+const startHandler = createCommand({
+  name: 'start',
+  description: 'Start or re-start the current timer.',
+}, (text, timer) => {
+  const wasStarted = timer.wasStarted();
+  timer.start();
+  return `Timer ${wasStarted ? 're-' : ''}started.`;
+});
 
-function getElapsedHandler(timer) {
-  return createCommand({
-    name: 'elapsed',
-    description: 'Get the elapsed time for the current timer.',
-  }, () => {
-    return timer.getElapsed();
-  });
-}
+const elapsedHandler = createCommand({
+  name: 'elapsed',
+  description: 'Get the elapsed time for the current timer.',
+}, (text, timer) => {
+  return timer.getElapsed();
+});
 
 // =============
 // the basic bot
@@ -62,14 +59,21 @@ const myBot = createBot({
   createMessageHandler(id) {
     // Create a new instance of our Timer class.
     const timer = new Timer();
-    // Create a new command with subcommands tied to the timer instance.
-    const messageHandler = createCommand({
+    // Create a message handler that first adjusts the args received from the
+    // bot to include the timer instance, then calls the command message handler
+    // with the adjusted arguments. While we're not using the original "message"
+    // object in our message handlers, it's included for completeness' sake.
+    const messageHandler = createArgsAdjuster({
+      adjustArgs(text, message) {
+        return [text, timer, message];
+      },
+    }, createCommand({
       isParent: true,
       description: 'A useful timer.'
     }, [
-      getStartHandler(timer),
-      getElapsedHandler(timer),
-    ]);
+      startHandler,
+      elapsedHandler,
+    ]));
     // Let the Bot know the message handler has state so it will be cached and
     // retrieved for future messages with the same id. Try commenting out this
     // line to see how Bot uses hasState.

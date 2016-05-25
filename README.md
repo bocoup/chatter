@@ -424,6 +424,50 @@ processMessage(rootCommand, 'multiply 3 4 5');
 See the [create-command](examples/create-command.js) and
 [create-command-namespaced](examples/create-command-namespaced.js) examples.
 
+#### createArgsAdjuster
+
+The `createArgsAdjuster` function creates a new message handler that calls the
+specified message handler with a different set of arguments than the message
+handler received. This is especially useful when you need to pass state from
+where a parent message handler is created into a child message handler.
+
+```js
+const incrementCommand = createCommand({
+  name: 'increment',
+  description: 'Increment the counter and show it.',
+}, function(message, state) {
+  state.counter++;
+  return `The counter is now at ${state.counter}.`;
+});
+
+function getStatefulMessageHandler() {
+  const state = {counter: 0};
+  return createArgsAdjuster({
+    adjustArgs(message) {
+      return [message, state];
+    },
+  }, createCommand({
+    isParent: true,
+    description: 'An exciting command, for sure.',
+  }, [
+    incrementCommand,
+  ]));
+}
+const firstStatefulHandler = getStatefulMessageHandler();
+
+processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 1.
+processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 2.
+
+const secondStatefulHandler = getStatefulMessageHandler();
+
+processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is now at 1.
+processMessage(firstStatefulHandler, 'increment')  // Promise -> The counter is now at 3.
+processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is now at 2.
+```
+
+See the [create-args-adjuster](examples/create-args-adjuster.js) and
+[stateful-bot](examples/stateful-bot.js) examples.
+
 #### createConversation
 
 The `createConversation` function creates a new message handler that calls the
