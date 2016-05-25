@@ -37,7 +37,7 @@ export class SlackBot extends Bot {
     return message.subtype === 'bot_message';
   }
 
-  getConversationId({message}) {
+  getMessageHandlerCacheId({message}) {
     return message.channel;
   }
 

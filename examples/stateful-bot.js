@@ -57,7 +57,7 @@ function getElapsedHandler(timer) {
 
 const myBot = createBot({
   // This function must be specified. Even though not used here, this function
-  // receives the id returned by getConversationId, which can be used to
+  // receives the id returned by getMessageHandlerCacheId, which can be used to
   // programatically return a different message handler.
   createMessageHandler(id) {
     // Create a new instance of our Timer class.
@@ -77,10 +77,10 @@ const myBot = createBot({
     // Return the message handler.
     return messageHandler;
   },
-  // Get the conversation id from the "message" object passed into onMessage.
-  // Try returning a fixed value to show how the bot uses the id to cache
+  // Get a cache id from the "message" object passed into onMessage. Try
+  // returning a fixed value to show how the bot uses the return value to cache
   // message handlers.
-  getConversationId(message) {
+  getMessageHandlerCacheId(message) {
     return message.user;
   },
   // Normally, this would actually send a message to a chat service, but since
@@ -111,10 +111,10 @@ function simulate(user, text) {
 
 // Simulate a series of messages, in order. Note that multiple users can talk
 // simultaneously and the bot will keep track of their conversations separately
-// because their user is used as the conversation id (see the getConversationId
-// function). If both users were both talking in a shared channel and the
-// channel name was used as the conversation id, the results would be very
-// different.
+// because their user name is used as the message handler cache id (see the
+// getMessageHandlerCacheId function). If both users were both talking in a
+// shared channel and the channel name was used as the cache id, the results
+// would be very different.
 import Promise from 'bluebird';
 Promise.mapSeries([
   () => simulate('cowboy', 'hello'),

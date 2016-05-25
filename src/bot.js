@@ -16,7 +16,7 @@ export class Bot {
     overrideProperties(this, options, [
       'onMessage',
       'ignoreMessage',
-      'getConversationId',
+      'getMessageHandlerCacheId',
       'getMessageHandler',
       'getMessageHandlerArgs',
       'handleResponse',
@@ -40,7 +40,7 @@ export class Bot {
         return [false];
       }
       const {text, args = []} = messageHandlerArgs;
-      const id = this.getConversationId(...args);
+      const id = this.getMessageHandlerCacheId(...args);
       const messageHandler = this.getMessageHandler(id, ...args);
       return [messageHandler, text, args];
     })
@@ -58,7 +58,7 @@ export class Bot {
     return false;
   }
 
-  getConversationId(message) {
+  getMessageHandlerCacheId(message) {
     return message.id;
   }
 
