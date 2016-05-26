@@ -58,6 +58,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
       for (let i = 0; i < parts.length; i++) {
         const subCommand = command.subCommands.find(({name}) => {
           if (name) {
+            // Handle spaces in command names.
             for (let j = i; j < parts.length; j++) {
               if (parts.slice(i, j + 1).join(' ') === name) {
                 i = j;
