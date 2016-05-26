@@ -1,5 +1,5 @@
 import Promise from 'bluebird';
-import {overrideProperties} from './util/class';
+import {overrideProperties} from './util/bot-helpers';
 import {processMessage} from './util/process-message';
 import {isMessage, normalizeMessage} from './util/response';
 

@@ -1,8 +1,8 @@
-import {overrideProperties} from './class';
+import {overrideProperties} from './bot-helpers';
 
 const nop = () => {};
 
-describe('util/class', function() {
+describe('util/bot-helpers', function() {
 
   it('should export the proper API', function() {
     expect(overrideProperties).to.be.a('function');

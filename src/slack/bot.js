@@ -1,5 +1,5 @@
 import {Bot} from '../bot';
-import {overrideProperties} from '../util/class';
+import {overrideProperties} from '../util/bot-helpers';
 import {parseMessage} from './util/message-parser';
 
 export class SlackBot extends Bot {
