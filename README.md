@@ -496,8 +496,7 @@ processMessage(conversationHandler, 'hello').then(handleResponse);
 // Hello to you too!
 ```
 
-See the [stateful-bot-conversation](examples/stateful-bot-conversation.js)
-example.
+See the [bot-conversation](examples/bot-conversation.js) example.
 
 #### createArgsAdjuster
 
@@ -547,7 +546,7 @@ processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is 
 ```
 
 See the [create-args-adjuster](examples/create-args-adjuster.js) and
-[stateful-bot](examples/stateful-bot.js) examples.
+[bot-stateful](examples/bot-stateful.js) examples.
 
 ### API
 

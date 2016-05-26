@@ -2,7 +2,7 @@
 // Learn more about ES2015 here: https://babeljs.io/docs/learn-es2015/
 //
 // Run "npm install" and then test with this command in your shell:
-// SLACK_API_TOKEN=<YOUR_TOKEN_HERE> node examples/slack.js
+// SLACK_API_TOKEN=<YOUR_TOKEN_HERE> node examples/slack-bot.js
 //
 // Note that you'll first need a Slack API token, which you can get by going
 // to your team's settings page and creating a new bot:

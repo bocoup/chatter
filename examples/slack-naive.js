@@ -2,7 +2,7 @@
 // Learn more about ES2015 here: https://babeljs.io/docs/learn-es2015/
 //
 // Run "npm install" and then test with this command in your shell:
-// SLACK_API_TOKEN=<YOUR_TOKEN_HERE> node examples/slack-basic.js
+// SLACK_API_TOKEN=<YOUR_TOKEN_HERE> node examples/slack-naive.js
 //
 // Note that you'll first need a Slack API token, which you can get by going
 // to your team's settings page and creating a new bot:
@@ -59,6 +59,9 @@ const messageHandlers = [
 // ===============
 // naive slack bot
 // ===============
+
+// Note that, while this example works, it's lacking a lot of useful
+// functionality. See slack-bot.js for a more robust example.
 
 // Create a basic RTM Slack bot.
 const rtmClient = new RtmClient(process.env.SLACK_API_TOKEN, {logLevel: 'error'});

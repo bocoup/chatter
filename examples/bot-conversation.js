@@ -2,7 +2,7 @@
 // Learn more about ES2015 here: https://babeljs.io/docs/learn-es2015/
 //
 // Run "npm install" and then test with this command in your shell:
-// node examples/stateful-bot-conversation.js
+// node examples/bot-conversation.js
 
 const Promise = require('bluebird');
 const chalk = require('chalk');
