@@ -134,7 +134,7 @@ const mathCommand = createCommand({
 
 const bot = createSlackBot({
   // The bot name.
-  name: 'Test Bot',
+  name: 'Chatter Bot',
   // The getSlack function should return instances of the slack rtm and web
   // clients, like so. See https://github.com/slackhq/node-slack-sdk
   getSlack() {
