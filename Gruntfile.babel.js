@@ -7,7 +7,7 @@ const exclude = a => Array.isArray(a) ? a.map(negate) : negate(a);
 const SOURCE_DIR = 'src';
 const SOURCE_GLOB = '**/*.js';
 const TEST_GLOB = '**/*.test.js';
-const BUILD_DIR = 'lib';
+const BUILD_DIR = 'dist';
 
 const BUILD_FILES = ['*.js', 'tools/**/*.js'];
 const LEGACY_BUILD_FILES = ['Gruntfile.js'];

@@ -593,7 +593,7 @@ Ensure you have [Node][node] 4.x or 6.x and Npm installed and run `npm install`
 before running any of the following commands:
 
 * `npm test` - Lints project code and runs tests.
-* `npm run build` - Builds project code from `src` into `lib` for publishing.
+* `npm run build` - Builds project code from `src` into `dist` for publishing.
 * `npm run start` - Watches project files for changes, linting, testing and
   building as-necessary.
 * `npm run babel` - Run ES2015 javascript via the babel cli.

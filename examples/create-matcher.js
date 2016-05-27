@@ -11,7 +11,7 @@ const chalk = require('chalk');
 //   import {processMessage, createMatcher} from 'chatter';
 // ES5 syntax:
 //   const chatter = require('chatter');
-const chatter = require('../lib');
+const chatter = require('..');
 const processMessage = chatter.processMessage;
 const createMatcher = chatter.createMatcher;
 

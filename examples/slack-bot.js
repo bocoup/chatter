@@ -14,7 +14,7 @@ const Promise = require('bluebird');
 //   import {createSlackBot, createCommand, createParser} from 'chatter';
 // ES5 syntax:
 //   const chatter = require('chatter');
-const chatter = require('../lib');
+const chatter = require('..');
 const createSlackBot = chatter.createSlackBot;
 const createCommand = chatter.createCommand;
 const createParser = chatter.createParser;

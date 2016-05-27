@@ -13,7 +13,7 @@ const chalk = require('chalk');
 //   import {createBot, createCommand, createArgsAdjuster} from 'chatter';
 // ES5 syntax:
 //   const chatter = require('chatter');
-const chatter = require('../lib');
+const chatter = require('..');
 const createBot = chatter.createBot;
 const createCommand = chatter.createCommand;
 const createArgsAdjuster = chatter.createArgsAdjuster;

@@ -2,7 +2,7 @@
   "name": "chatter",
   "version": "0.2.4",
   "description": "A collection of useful primitives for creating interactive chat bots.",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "grunt test",
     "build": "grunt build",
