@@ -158,9 +158,9 @@ function simulate(message) {
   });
 }
 
-simulate('lol what') // Logs: More like "laugh out loud what" amirite
-simulate('getstuff') // Logs: Look at all the stuff! ...
-simulate('huh')      // Logs: Sorry, I don't understand "huh".
+simulate('lol what')  // Logs: More like "laugh out loud what" amirite
+simulate('get stuff') // Logs: Look at all the stuff! ...
+simulate('huh')       // Logs: Sorry, I don't understand "huh".
 ```
 
 Of course, instead of logging the response, your bot would be sending it back to
