@@ -23,6 +23,9 @@
   "engines": {
     "node": ">=4.0"
   },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "babel-runtime": "^6.9.0",
     "bluebird": "^3.3.5",
