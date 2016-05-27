@@ -1,8 +1,18 @@
+// If this syntax looks unfamiliar, don't worry, it's just JavaScript!
+// Learn more about ES2015 here: https://babeljs.io/docs/learn-es2015/
+//
 // Run "npm install" and then test with this command in your shell:
-// npm run babel examples/message-handlers.js
+// node examples/message-handlers.js
 
-import Promise from 'bluebird';
-import {processMessage} from '../src';
+const Promise = require('bluebird');
+const chalk = require('chalk');
+
+// ES2015 syntax:
+//   import {processMessage} from 'chatter';
+// ES5 syntax:
+//   const chatter = require('chatter');
+const chatter = require('..');
+const processMessage = chatter.processMessage;
 
 // Simulate a promise-yielding database abstraction.
 const db = {
@@ -18,10 +28,10 @@ const db = {
 // message handlers
 // ================
 
-// Plain function. Receives a message and returns a value.
+// Plain function. Receives a message and always returns a response.
 const alwaysRespond = message => `You said "${message}".`;
 
-// Plain function. Receives a message and sometimes returns a value, but
+// Plain function. Receives a message and sometimes returns a response, but
 // sometimes returns false.
 const sometimesRespond = message => {
   if (/lol/i.test(message)) {
@@ -41,17 +51,20 @@ const multipleResponders = [
 // Object with a handleMessage method. Also returns a promise that yields a
 // value.
 const respondEventually = {
-  handleMessage() {
-    return db.query('SELECT * FROM STUFF').then(results => {
-      const stuff = results.join(', ');
-      return `Look at all the stuff: ${stuff}`;
-    });
+  handleMessage(message) {
+    if (message === 'get stuff') {
+      return db.query('SELECT * FROM STUFF').then(results => {
+        const stuff = results.join(', ');
+        return `Look at all the stuff: ${stuff}`;
+      });
+    }
+    return false;
   },
 };
 
 // Object with a handleMessage method. This is basically what you get when you
-// use createMatcher (so use that instead). This module's handleMessage
-// function is used to iterate over all children.
+// use createMatcher, so use that instead. The chatter "processMessage"
+// function is used to process the message through all children.
 const matchAndRunChildHandlers = {
   match: 'yo',
   children: [
@@ -69,16 +82,18 @@ const matchAndRunChildHandlers = {
     if (remainder === false) {
       return false;
     }
+    else if (remainder === '') {
+      return `You need to specify something after "yo".`;
+    }
     return processMessage(this.children, remainder);
   },
 };
 
 
-// ================
-// handle messages!
-// ================
+// ====================================
+// process messages with processMessage
+// ====================================
 
-import chalk from 'chalk';
 function log(color, prefix, message) {
   message = message.replace(/(\n)/g, `$1${' '.repeat(prefix.length + 1)}`);
   console.log(chalk[color](`${prefix} ${message}`));
@@ -90,12 +105,13 @@ function header(message) {
 
 function simulate(messageHandler, message) {
   log('magenta', '\n[In] ', message);
-  return processMessage(messageHandler, message).then(response => {
+  return processMessage(messageHandler, message)
+  .then(response => {
     const text = response !== false ? response : '-';
     log('green', '[Out]', text);
-  });
+  })
+  .then(() => Promise.delay(100));
 }
-
 
 Promise.mapSeries([
   () => header('alwaysRespond'),
@@ -111,7 +127,8 @@ Promise.mapSeries([
   () => simulate(multipleResponders, 'lol world'),
 
   () => header('respondEventually'),
-  () => simulate(respondEventually, ''),
+  () => simulate(respondEventually, 'get stuff'),
+  () => simulate(respondEventually, 'get nothing'),
 
   () => header('matchAndRunChildHandlers'),
   () => simulate(matchAndRunChildHandlers, 'not yo'),

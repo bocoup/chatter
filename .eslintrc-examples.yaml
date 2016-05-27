@@ -1,0 +1,12 @@
+---
+extends:
+  - "./.eslintrc-es2015.yaml"
+
+plugins:
+  - node
+
+rules:
+  node/no-unsupported-features:
+    - error
+  no-use-before-define:
+    - 0

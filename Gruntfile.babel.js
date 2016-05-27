@@ -7,13 +7,14 @@ const exclude = a => Array.isArray(a) ? a.map(negate) : negate(a);
 const SOURCE_DIR = 'src';
 const SOURCE_GLOB = '**/*.js';
 const TEST_GLOB = '**/*.test.js';
-const BUILD_DIR = 'lib';
+const BUILD_DIR = 'dist';
 
 const BUILD_FILES = ['*.js', 'tools/**/*.js'];
 const LEGACY_BUILD_FILES = ['Gruntfile.js'];
 const LINT_FILES = ['.eslintrc*', 'eslint/**/*'];
 const TEST_FILES = [`${SOURCE_DIR}/${TEST_GLOB}`];
 const SRC_FILES = [`${SOURCE_DIR}/${SOURCE_GLOB}`, ...exclude(TEST_FILES)];
+const EXAMPLE_FILES = ['examples/**/*.js'];
 
 const babel = {
   build: {
@@ -32,6 +33,10 @@ const watch = {
   src: {
     files: SRC_FILES,
     tasks: ['eslint:src', 'mochaTest', 'build'],
+  },
+  examples: {
+    files: EXAMPLE_FILES,
+    tasks: ['eslint:examples'],
   },
   test: {
     files: TEST_FILES,
@@ -53,6 +58,10 @@ const eslint = {
   src: {
     options: {configFile: '.eslintrc-es2015.yaml'},
     src: SRC_FILES,
+  },
+  examples: {
+    options: {configFile: '.eslintrc-examples.yaml'},
+    src: EXAMPLE_FILES,
   },
   test: {
     options: {configFile: '.eslintrc-mocha.yaml'},

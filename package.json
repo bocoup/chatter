@@ -1,8 +1,8 @@
 {
   "name": "chatter",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "A collection of useful primitives for creating interactive chat bots.",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "grunt test",
     "build": "grunt build",
@@ -20,6 +20,12 @@
     "url": "https://github.com/bocoup/chatter/issues"
   },
   "homepage": "https://github.com/bocoup/chatter#readme",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "babel-runtime": "^6.9.0",
     "bluebird": "^3.3.5",
@@ -35,6 +41,7 @@
     "chai-as-promised": "^5.3.0",
     "chalk": "^1.1.3",
     "dirty-chai": "^1.2.2",
+    "eslint-plugin-node": "^1.4.0",
     "grunt": "^1.0.1",
     "grunt-babel": "^6.0.0",
     "grunt-cli": "^1.2.0",

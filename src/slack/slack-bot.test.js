@@ -1,4 +1,4 @@
-import createSlackBot, {SlackBot} from './bot';
+import createSlackBot, {SlackBot} from './slack-bot';
 
 const nop = () => {};
 

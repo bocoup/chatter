@@ -58,6 +58,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
       for (let i = 0; i < parts.length; i++) {
         const subCommand = command.subCommands.find(({name}) => {
           if (name) {
+            // Handle spaces in command names.
             for (let j = i; j < parts.length; j++) {
               if (parts.slice(i, j + 1).join(' ') === name) {
                 i = j;
@@ -121,8 +122,8 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
       name: 'help',
       description: 'Get help for the specified command.',
       usage: '<command>',
-      handleMessage: createParser(({remain}) => {
-        const search = remain.join(' ');
+      handleMessage: createParser(({args}) => {
+        const search = args.join(' ');
         const {command, subCommandName, prefix, exact} = this.getMatchingSubCommand(search);
         return command.helpInfo(search, subCommandName, prefix, exact);
       }),

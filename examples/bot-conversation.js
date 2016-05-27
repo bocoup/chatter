@@ -1,27 +1,39 @@
+// If this syntax looks unfamiliar, don't worry, it's just JavaScript!
+// Learn more about ES2015 here: https://babeljs.io/docs/learn-es2015/
+//
 // Run "npm install" and then test with this command in your shell:
-// npm run babel examples/conversation.js
+// node examples/bot-conversation.js
 
-import {
-  createBot,
-  createConversation,
-  createMatcher,
-  createParser,
-} from '../src';
+const Promise = require('bluebird');
+const chalk = require('chalk');
 
-// ===============================
-// "parent" handler's sub-handlers
-// ===============================
+// ES2015 syntax:
+//   import {createBot, createConversation, createMatcher, createParser} from 'chatter';
+// ES5 syntax:
+//   const chatter = require('chatter');
+const chatter = require('..');
+const createBot = chatter.createBot;
+const createConversation = chatter.createConversation;
+const createMatcher = chatter.createMatcher;
+const createParser = chatter.createParser;
+
+// =======================================
+// "parent" message handler's sub-handlers
+// =======================================
 
 // Respond to a message starting with "parse", then return response with the
 // parsed args.
-const parseHandler = createMatcher({match: 'parse'}, createParser(({remain}, {user}) => {
-  return `Parse received <${remain.join('> <')}> from ${user}.`;
+const parseHandler = createMatcher({match: 'parse'}, createParser((parsed, message) => {
+  const args = parsed.args;
+  const user = message.user;
+  return `parseHandler received <${args.join('> <')}> from ${user}.`;
 }));
 
 // Respond to a message starting with "message", then return response with
 // the remainder of the message.
-const messageHandler = createMatcher({match: 'message'}, (message, {user}) => {
-  return `Message received "${message}" from ${user}.`;
+const messageHandler = createMatcher({match: 'message'}, (text, message) => {
+  const user = message.user;
+  return `messageHandler received "${text}" from ${user}.`;
 });
 
 // Respond to a message starting with "ask", then return response object with
@@ -29,26 +41,32 @@ const messageHandler = createMatcher({match: 'message'}, (message, {user}) => {
 // message.
 const askHandler = createMatcher({
   match: 'ask',
-  handleMessage(message, {user}) {
+  handleMessage(text, message) {
+    const user = message.user;
     return {
       message: `Why do you want me to ask you a question, ${user}?`,
-      dialog(message, {user}) {
-        return `I'm not sure "${message}" is a good reason, ${user}.`;
-      },
+      dialog: dialogHandler,
     };
   },
 });
+
+// The "dialog" message handler that's returned after "ask" is matched.
+function dialogHandler(text, message) {
+  const user = message.user;
+  return `I'm not sure "${text}" is a good reason, ${user}.`;
+}
 
 // Respond to a message starting with "choose", then return response object with
 // message and "dialog" message handler that preempts handling of the next
 // message.
 const chooseHandler = createMatcher({
   match: 'choose',
-  handleMessage(message, {user}) {
+  handleMessage(text, message) {
+    const user = message.user;
     return {
       message: `Choose one of the following, ${user}: a, b, c or exit.`,
       dialog: getChooseHandlerChoices(['a', 'b', 'c'], choice => `Thank you for choosing "${choice}".`),
-    }
+    };
   },
 });
 
@@ -78,9 +96,9 @@ function getChooseHandlerChoices(choices, choiceHandler) {
   ];
 }
 
-// ================
-// "parent" handler
-// ================
+// ========================
+// "parent" message handler
+// ========================
 
 // Pass any message starting with "parent" to the child message handlers, with
 // the leading "parent" removed.
@@ -91,7 +109,7 @@ const parentHandler = createMatcher({match: 'parent'}, [
   chooseHandler,
   // Create a "fallback" handler that always returns a message if none of the
   // preceding message handlers match (ie. they all return false)
-  (message, {user}) => `Parent fallback received "${message}" from ${user}.`,
+  (text, message) => `Parent fallback received "${text}" from ${message.user}.`,
 ]);
 
 // =========================
@@ -101,11 +119,9 @@ const parentHandler = createMatcher({match: 'parent'}, [
 // This handler throws an exception, which is caught by the bot.
 const whoopsHandler = createMatcher({
   match: 'whoops',
-  handleMessage: createParser({
-    handleMessage(args, user) {
-      throw new Error('Whoops error.');
-    },
-  }),
+  handleMessage() {
+    throw new Error('Whoops error.');
+  },
 });
 
 // =============
@@ -114,20 +130,22 @@ const whoopsHandler = createMatcher({
 
 const myBot = createBot({
   // This function must be specified. Even though not used here, this function
-  // receives the id returned by getConversationId, which can be used to
+  // receives the id returned by getMessageHandlerCacheId, which can be used to
   // programatically return a different message handler.
   createMessageHandler(id) {
     // Because a "conversation" message handler has state, it will be cached
-    // for future use for messages with the same id.
+    // for future use for messages with the same id. Try replacing the
+    // createConversation function with just the the array of message handlers
+    // to see how differently the bot behaves!
     return createConversation([
       parentHandler,
       whoopsHandler,
     ]);
   },
-  // Get the conversation id from the "message" object passed into onMessage.
-  // Try returning a fixed value to show how the bot uses the id to cache
+  // Get a cache id from the message object passed into onMessage. Try
+  // returning a fixed value to show how the bot uses the return value to cache
   // message handlers.
-  getConversationId(message) {
+  getMessageHandlerCacheId(message) {
     return message.user;
   },
   // Normally, this would actually send a message to a chat service, but since
@@ -143,8 +161,7 @@ const myBot = createBot({
 // simulate the bot interacting with a user
 // ========================================
 
-import chalk from 'chalk';
-const colorMap = {cowboy: 'magenta', joe: 'yellow'}
+const colorMap = {cowboy: 'magenta', joe: 'yellow'};
 
 function simulate(user, text) {
   // Display the user message.
@@ -158,23 +175,22 @@ function simulate(user, text) {
 
 // Simulate a series of messages, in order. Note that multiple users can talk
 // simultaneously and the bot will keep track of their conversations separately
-// because their user is used as the conversation id (see the getConversationId
-// function). If both users were both talking in a shared channel and the
-// channel name was used as the conversation id, the results would be very
-// different.
-import Promise from 'bluebird';
+// because their user name is used as the message handler cache id (see the
+// getMessageHandlerCacheId function). If both users were both talking in a
+// shared channel and the channel name was used as the cache id, the results
+// would be very different.
 Promise.mapSeries([
-  () => simulate('cowboy', 'parent message should be parsed by the message handler'),
-  () => simulate('joe', 'parent parse should be parsed by the parse handler'),
+  () => simulate('cowboy', 'parent message should be handled by messageHandler'),
+  () => simulate('joe', 'parent parse should be parsed by parseHandler'),
   () => simulate('cowboy', 'whoops should throw an exception'),
   () => simulate('cowboy', 'parent ask'),
-  () => simulate('joe', 'parent should be parsed by the parent fallback handler'),
+  () => simulate('joe', 'parent should be handled by the fallback handler'),
   () => simulate('joe', 'parent choose'),
   () => simulate('cowboy', 'i dunno'),
   () => simulate('cowboy', 'parent choose'),
   () => simulate('cowboy', 'parent ask'),
   () => simulate('joe', 'exit'),
   () => simulate('cowboy', 'a'),
-  () => simulate('joe', 'xyz should not be parsed by anything'),
-  () => simulate('cowboy', 'parent should be parsed by the parent fallback handler'),
+  () => simulate('joe', 'xyz should not be handled by anything'),
+  () => simulate('cowboy', 'parent should be handled by the fallback handler'),
 ], f => f());
