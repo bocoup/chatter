@@ -103,9 +103,8 @@ const myBot = createBot({
   },
   // Normally, this would actually send a message to a chat service, but since
   // this is a simulation, just log the response to the console.
-  sendResponse(message, response) {
+  sendResponse(message, text) {
     // Display the bot response.
-    const text = this.normalizeResponse(response);
     console.log(chalk.cyan(`[bot] ${text}`));
   },
 });
