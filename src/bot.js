@@ -1,7 +1,7 @@
 import Promise from 'bluebird';
 import {overrideProperties} from './util/bot-helpers';
 import {processMessage} from './util/process-message';
-import {isMessage, normalizeMessage} from './util/response';
+import {isMessage, isArrayOfMessages, normalizeMessage, normalizeMessages} from './util/response';
 
 export class Bot {
 
@@ -135,32 +135,31 @@ export class Bot {
   // this function.
   //
   // This function receives the original "message" and "response" value returned
-  // or yielded by the message handler. If no message handler yielded or
-  // returned a non-false response, abort. Otherwise, normalize the response and
-  // send it to the same channel, group or DM from which the message originated.
+  // or yielded by the message handler. Normalize the response into an array
+  // containing zero or more messages, and pass each to the sendResponse method,
+  // in order.
   handleResponse(message, response) {
     if (response === false) {
       return false;
     }
-    const text = this.normalizeResponse(response);
-    if (text === false) {
-      return false;
-    }
-    return this.sendResponse(message, text);
+    const responses = this.normalizeResponse(response);
+    return Promise.all(responses.map(text => this.sendResponse(message, text)));
   }
 
-  // Normalize response into a text string. If the "response" or response
-  // "message" property is comprised only of arrays, strings, numbers, false,
-  // null or undefined, it's a message. Flatten all arrays, remove any false,
-  // null or undefined values, and join the resulting array on newline.
-  normalizeResponse(response) {
+  // Normalize response into an array of 0 or more text messages. For each
+  // "message", flatten all arrays, remove any false, null or undefined values,
+  // and join the resulting flattened and filtered array on newline.
+  normalizeResponse(response = {}) {
     if (isMessage(response)) {
-      return normalizeMessage(response);
+      return [normalizeMessage(response)];
+    }
+    else if (isArrayOfMessages(response.messages)) {
+      return normalizeMessages(response.messages);
     }
     else if (isMessage(response.message)) {
-      return normalizeMessage(response.message);
+      return [normalizeMessage(response.message)];
     }
-    return false;
+    return [];
   }
 
   // If a message handler threw an exception or was otherwise rejected, run this

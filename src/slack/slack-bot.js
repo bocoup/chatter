@@ -1,5 +1,8 @@
+import Promise from 'bluebird';
 import {Bot} from '../bot';
 import {overrideProperties} from '../util/bot-helpers';
+import {isMessage} from '../util/response';
+import Queue from '../util/queue';
 import {parseMessage} from './util/message-parser';
 
 export class SlackBot extends Bot {
@@ -12,6 +15,7 @@ export class SlackBot extends Bot {
       name = 'Chatter Bot',
       icon = 'https://placekitten.com/48/48',
       eventNames = ['open', 'error', 'message'],
+      postMessageDelay = 250,
     } = options;
     if (!slack && !getSlack) {
       throw new TypeError('Missing required "slack" or "getSlack" option.');
@@ -24,6 +28,8 @@ export class SlackBot extends Bot {
     this.getSlack = getSlack;
     // Slack rtm client event names to bind to.
     this.eventNames = eventNames;
+    // Delay between messages sent via postMessage.
+    this.postMessageDelay = postMessageDelay;
     // Allow any of these options to override default Bot methods.
     overrideProperties(this, options, [
       'formatOnOpen',
@@ -31,9 +37,13 @@ export class SlackBot extends Bot {
       'login',
       'onOpen',
       'onError',
-      'postMessage',
       'postMessageOptions',
+      'postMessageActual',
     ]);
+    // Create per-channel queues of messages to be sent.
+    this.postMessageQueue = new Queue({
+      onDrain: this.postMessageActual.bind(this),
+    });
   }
 
   // Provide a bound-to-this-slack wrapper around the parseMessage utility
@@ -149,19 +159,30 @@ export class SlackBot extends Bot {
   // After a message handler response has been normalized, send the response
   // text to the channel from where the message originated.
   sendResponse(message, text) {
-    return this.postMessage(message.channel, text);
+    return this._postMessage(message.channel, text);
   }
 
-  // Send an arbitrary message to an arbitrary slack channel. If options aren't
-  // specified, get them via postMessageOptions. Returns a promise that
-  // resolves after the message has been sent, so multiple messages can be
-  // sent in-order.
-  postMessage(channelId, text, options) {
-    text = this.normalizeResponse(text);
-    if (!options) {
-      options = this.postMessageOptions(text);
+  // Send an arbitrary message to an arbitrary slack channel, Returns a promise
+  // that resolves after all queued messages for the given channelId have been
+  // sent.
+  // Usage:
+  //   postMessage(channelId, message) // message will be normalized and passed into postMessageOptions
+  //   postMessage(channelId, options) // options will be used instead of postMessageOptions
+  postMessage(channelId, options) {
+    if (isMessage(options)) {
+      options = this.normalizeResponse(options)[0];
     }
-    return this.slack.webClient.chat.postMessage(channelId, null, options);
+    return this._postMessage(channelId, options);
+  }
+
+  // For use internally. Doesn't call normalizeResponse since Bot#handleResponse
+  // and SlackBot#postMessage will have already done that.
+  _postMessage(channelId, options) {
+    if (typeof options === 'string') {
+      options = this.postMessageOptions(options);
+    }
+    // Create a per-channelId queue of responses to be sent.
+    return this.postMessageQueue.enqueue(channelId, options);
   }
 
   // Get postMessage options. See the slack API documentation for more info:
@@ -175,6 +196,14 @@ export class SlackBot extends Bot {
       unfurl_links: false,
       unfurl_media: false,
     };
+  }
+
+  // For each response, call the slack web client postMessage API and then
+  // pause briefly. This prevents flooding and allows the bot's responses to
+  // feel well-paced.
+  postMessageActual(channelId, options) {
+    return this.slack.webClient.chat.postMessage(channelId, null, options)
+      .then(() => Promise.delay(this.postMessageDelay));
   }
 
 }
