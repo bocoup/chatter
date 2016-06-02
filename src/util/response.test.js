@@ -1,12 +1,14 @@
 /* eslint no-undefined: 0 */
 
-import {isMessage, normalizeMessage} from './response';
+import {isMessage, isArrayOfMessages, normalizeMessage, normalizeMessages} from './response';
 
 describe('util/response', function() {
 
   it('should export the proper API', function() {
     expect(isMessage).to.be.a('function');
+    expect(isArrayOfMessages).to.be.a('function');
     expect(normalizeMessage).to.be.a('function');
+    expect(normalizeMessages).to.be.a('function');
   });
 
   describe('isMessage', function() {
@@ -39,6 +41,27 @@ describe('util/response', function() {
 
   });
 
+  describe('isArrayOfMessages', function() {
+
+    it('should handle simple values', function() {
+      expect(isArrayOfMessages('foo')).to.equal(false);
+      expect(isArrayOfMessages(123)).to.equal(false);
+      expect(isArrayOfMessages(null)).to.equal(false);
+      expect(isArrayOfMessages(undefined)).to.equal(false);
+      expect(isArrayOfMessages(false)).to.equal(false);
+      expect(isArrayOfMessages(true)).to.equal(false);
+
+      expect(isArrayOfMessages([])).to.equal(true);
+      expect(isArrayOfMessages(['foo'])).to.equal(true);
+      expect(isArrayOfMessages(['foo', 123, null, undefined, false])).to.equal(true);
+      expect(isArrayOfMessages([['foo', [123, [[null], [[undefined], false]]]]])).to.equal(true);
+
+      expect(isArrayOfMessages(['foo', 123, {}])).to.equal(false);
+      expect(isArrayOfMessages([['foo', [123, [[null], [[undefined, {}], false]]]]])).to.equal(false);
+    });
+
+  });
+
   describe('normalizeMessage', function() {
 
     it('should handle single values', function() {
@@ -67,6 +90,45 @@ describe('util/response', function() {
       expect(
         normalizeMessage([['foo', [123, [[null], ['', [undefined, 'bar'], false]]], 456]])
       ).to.equal('foo\n123\n\nbar\n456');
+    });
+
+  });
+
+  describe('normalizeMessages', function() {
+
+    it('should handle messages containing single values', function() {
+      expect(normalizeMessages(['foo', 123, null])).to.deep.equal(['foo', '123']);
+      expect(normalizeMessages([undefined, 'test', false, 123])).to.deep.equal(['test', '123']);
+    });
+
+    it('should handle messages containing arrays of values', function() {
+      expect(normalizeMessages([])).to.deep.equal([]);
+      expect(normalizeMessages([
+        ['foo'], [123], [null], [undefined],
+      ])).to.deep.equal([
+        'foo', '123', '', '',
+      ]);
+      expect(normalizeMessages([
+        null,
+        ['foo', 'bar'],
+        undefined,
+        ['foo', '', 'bar', '', '', 'baz'],
+      ])).to.deep.equal([
+        'foo\nbar',
+        'foo\n\nbar\n\n\nbaz',
+      ]);
+    });
+
+    it('should handle deeply-nested arrays of values', function() {
+      expect(
+        normalizeMessages([
+          [['foo', [123, [[null], [[undefined], false]]]]],
+          [['foo', [123, [[null], ['', [undefined, 'bar'], false]]], 456]],
+        ])
+      ).to.deep.equal([
+        'foo\n123',
+        'foo\n123\n\nbar\n456',
+      ]);
     });
 
   });
