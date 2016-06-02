@@ -10,6 +10,11 @@ export const isMessage = R.pipe(
   R.equals(0)
 );
 
+// Is the argument an array of messages?
+export function isArrayOfMessages(messages) {
+  return Array.isArray(messages) && messages.every(isMessage);
+}
+
 // Flatten message array and remove null, undefined or false items, then join
 // on newline.
 export const normalizeMessage = R.pipe(
@@ -17,4 +22,10 @@ export const normalizeMessage = R.pipe(
   R.flatten,
   R.reject(s => R.isNil(s) || s === false),
   R.join('\n')
+);
+
+// Normalize an array of messages, removing null, undefined or false items.
+export const normalizeMessages = R.pipe(
+  R.reject(s => R.isNil(s) || s === false),
+  R.map(normalizeMessage)
 );

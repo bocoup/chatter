@@ -41,7 +41,9 @@ describe('npm module', function() {
     expect(api.processMessage).to.be.a('function');
     expect(api.parseArgs).to.be.a('function');
     expect(api.isMessage).to.be.a('function');
+    expect(api.isArrayOfMessages).to.be.a('function');
     expect(api.normalizeMessage).to.be.a('function');
+    expect(api.normalizeMessages).to.be.a('function');
     expect(api.Queue).to.be.a('function');
   });
 

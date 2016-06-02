@@ -13,6 +13,6 @@ export {CommandMessageHandler, default as createCommand} from './message-handler
 // Util
 export {processMessage, isMessageHandlerOrHandlers} from './util/process-message';
 export {parseArgs} from './util/args-parser';
-export {isMessage, normalizeMessage} from './util/response';
+export {isMessage, isArrayOfMessages, normalizeMessage, normalizeMessages} from './util/response';
 export {default as Queue} from './util/queue';
 export {composeCreators} from './message-handler/delegate';
