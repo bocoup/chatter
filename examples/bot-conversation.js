@@ -44,7 +44,11 @@ const askHandler = createMatcher({
   handleMessage(text, message) {
     const user = message.user;
     return {
-      message: `Why do you want me to ask you a question, ${user}?`,
+      messages: [
+        `That's great!`,
+        `Wait a second...`,
+        `Why do you want me to ask you a question, ${user}?`,
+      ],
       dialog: dialogHandler,
     };
   },

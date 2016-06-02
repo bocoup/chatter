@@ -77,7 +77,14 @@ const echoCommand = createCommand({
   usage: '<say anything here>',
 }, text => {
   if (text) {
-    return `You said *${text}*`;
+    const isAmazing = text.toLowerCase() === 'amazing';
+    return {
+      messages: [
+        `You said *${text}*.`,
+        isAmazing ? 'Which is amazing...' : 'Which is great, and all...',
+        isAmazing ? 'Literally!' : 'But not amazing.',
+      ],
+    };
   }
   return false;
 });
