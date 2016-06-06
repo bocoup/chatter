@@ -1,7 +1,7 @@
 import Promise from 'bluebird';
 import {Bot} from '../bot';
 import {overrideProperties} from '../util/bot-helpers';
-import {isMessage} from '../util/response';
+import {isMessage, normalizeResponse} from '../util/response';
 import Queue from '../util/queue';
 import {parseMessage} from './util/message-parser';
 
@@ -170,7 +170,7 @@ export class SlackBot extends Bot {
   //   postMessage(channelId, options) // options will be used instead of postMessageOptions
   postMessage(channelId, options) {
     if (isMessage(options)) {
-      options = this.normalizeResponse(options)[0];
+      options = normalizeResponse(options)[0];
     }
     return this._postMessage(channelId, options);
   }

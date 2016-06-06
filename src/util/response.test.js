@@ -1,6 +1,12 @@
 /* eslint no-undefined: 0 */
 
-import {isMessage, isArrayOfMessages, normalizeMessage, normalizeMessages} from './response';
+import {
+  isMessage,
+  isArrayOfMessages,
+  normalizeMessage,
+  normalizeMessages,
+  normalizeResponse,
+} from './response';
 
 describe('util/response', function() {
 
@@ -9,6 +15,7 @@ describe('util/response', function() {
     expect(isArrayOfMessages).to.be.a('function');
     expect(normalizeMessage).to.be.a('function');
     expect(normalizeMessages).to.be.a('function');
+    expect(normalizeResponse).to.be.a('function');
   });
 
   describe('isMessage', function() {
@@ -129,6 +136,45 @@ describe('util/response', function() {
         'foo\n123',
         'foo\n123\n\nbar\n456',
       ]);
+    });
+
+  });
+
+  describe('normalizeResponse', function() {
+
+    beforeEach(function() {
+      this.message = [['foo', [123, [[null], [[undefined], false]]], 'bar']];
+      this.normalized = 'foo\n123\nbar';
+    });
+
+    it('should handle a value that is just a message', function() {
+      expect(normalizeResponse(this.message)).to.deep.equal([this.normalized]);
+    });
+
+    it('should handle a value that is an object with a message property', function() {
+      expect(normalizeResponse({
+        message: this.message,
+      })).to.deep.equal([
+        this.normalized,
+      ]);
+    });
+
+    it('should handle a value that is an object with a messages property', function() {
+      expect(normalizeResponse({
+        messages: [
+          this.message,
+          this.message,
+        ],
+      })).to.deep.equal([
+        this.normalized,
+        this.normalized,
+      ]);
+    });
+
+    it('should return false otherwise', function() {
+      expect(normalizeResponse({})).to.equal(false);
+      expect(normalizeResponse([{}])).to.equal(false);
+      expect(normalizeResponse([{}, {}])).to.equal(false);
     });
 
   });
