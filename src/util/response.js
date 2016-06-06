@@ -29,3 +29,19 @@ export const normalizeMessages = R.pipe(
   R.reject(s => R.isNil(s) || s === false),
   R.map(normalizeMessage)
 );
+
+// Normalize response into an array of 0 or more text messages. For each
+// "message", flatten all arrays, remove any false, null or undefined values,
+// and join the resulting flattened and filtered array on newline.
+export function normalizeResponse(response = {}) {
+  if (isMessage(response)) {
+    return [normalizeMessage(response)];
+  }
+  else if (isArrayOfMessages(response.messages)) {
+    return normalizeMessages(response.messages);
+  }
+  else if ('message' in response && isMessage(response.message)) {
+    return [normalizeMessage(response.message)];
+  }
+  return false;
+}

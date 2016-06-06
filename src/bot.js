@@ -1,7 +1,7 @@
 import Promise from 'bluebird';
 import {overrideProperties} from './util/bot-helpers';
 import {processMessage} from './util/process-message';
-import {isMessage, isArrayOfMessages, normalizeMessage, normalizeMessages} from './util/response';
+import {normalizeResponse} from './util/response';
 
 export class Bot {
 
@@ -27,7 +27,6 @@ export class Bot {
       'getMessageHandlerArgs',
       'handleResponse',
       'handleError',
-      'normalizeResponse',
       'sendResponse',
     ]);
   }
@@ -142,24 +141,8 @@ export class Bot {
     if (response === false) {
       return false;
     }
-    const responses = this.normalizeResponse(response);
+    const responses = normalizeResponse(response) || [];
     return Promise.all(responses.map(text => this.sendResponse(message, text)));
-  }
-
-  // Normalize response into an array of 0 or more text messages. For each
-  // "message", flatten all arrays, remove any false, null or undefined values,
-  // and join the resulting flattened and filtered array on newline.
-  normalizeResponse(response = {}) {
-    if (isMessage(response)) {
-      return [normalizeMessage(response)];
-    }
-    else if (isArrayOfMessages(response.messages)) {
-      return normalizeMessages(response.messages);
-    }
-    else if (isMessage(response.message)) {
-      return [normalizeMessage(response.message)];
-    }
-    return [];
   }
 
   // If a message handler threw an exception or was otherwise rejected, run this
