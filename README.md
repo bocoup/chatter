@@ -31,22 +31,22 @@ keep track of ongoing conversations with users.
 The most basic bot looks something like this (note, this is pseudocode):
 
 ```js
-// Import the chat service's bot library.
-const ServiceBot = require('service-bot');
+// Import the chat service's library.
+const ChatService = require('chat-service');
 
-// Create the bot with the relevant options.
-const myBot = new ServiceBot(options);
+// Create a chat service instance with the relevant options.
+const myChatService = new ChatService(options);
 
-// When the bot receives a message that it cares about, respond to it.
-myBot.on('message', message => {
-  // This is the code you'll spend most of your time writing:
+// When the chat service receives a message that it cares about, respond to it.
+myChatService.on('message', message => {
+  // This is the code you'll spend most of your time writing. Ie, the bot:
   if (doICareAbout(message)) {
-    myBot.send(response);
+    myChatService.send(response);
   }
 });
 
-// Tell the bot to connect to the chat service.
-myBot.connect();
+// Actually connect to the chat service.
+myChatService.connect();
 ```
 
 Usually, all the behind-the-scenes work of connecting the bot to the remote
@@ -231,15 +231,15 @@ creative ways.
 
 (See [message-handlers](./examples/message-handlers.js) for more examples)
 
-### A bot using message handlers and processMessage
+### A naive bot using message handlers and processMessage
 
 Like the earlier [What is a bot?](#what-is-a-bot) example, this bot is
 pseudocode, but this time it uses message handlers and the `processMessage`
 helper function:
 
 ```js
-// Import the chat service's bot library.
-const ServiceBot = require('service-bot');
+// Import the chat service's library.
+const ChatService = require('chat-service');
 
 // Import the chatter processMessage helper function.
 const processMessage = require('chatter').processMessage;
@@ -247,22 +247,22 @@ const processMessage = require('chatter').processMessage;
 // Define your message handlers.
 const messageHandlers = [...];
 
-// Create the bot with the relevant options.
-const myBot = new ServiceBot(options);
+// Create a chat service instance with the relevant options.
+const myChatService = new ChatService(options);
 
-// When the bot receives a message that it cares about, respond to it.
-myBot.on('message', function(message) {
-  // Things just got a lot easier.
+// When the chat service receives a message that it cares about, respond to it.
+myChatService.on('message', message => {
+  // The bot just became a whole lot more flexible:
   processMessage(messageHandlers, message).then(response => {
     if (response === false) {
       response = `Sorry, I don't understand "${message}".`;
     }
-    myBot.send(response);
+    myChatService.send(response);
   });
 });
 
-// Tell the bot to connect to the chat service.
-myBot.connect();
+// Actually connect to the chat service.
+myChatService.connect();
 ```
 
 ### Additional included message handlers
@@ -335,22 +335,38 @@ processMessage(addHandler, '1 2 3')    // Promise -> 1 + 2 + 3 = 6
 processMessage(addHandler, '4 five 6') // Promise -> 4 + five + 6 = NaN
 ```
 
+When `parseOptions` is defined, any options in the message specified like
+`option=value` will be parsed and processed via the defined function, and made
+available in `parsed.options` (any non-options args will still be available in
+`parsed.args`). As you can see, options may be abbreviated!
+
+```js
+const parsingHandler = createParser({
+  parseOptions: {
+    alpha: String,
+    beta: Number,
+  },
+}, parsed => JSON.stringify(parsed.options));
+
+processMessage(parsingHandler, 'a=1 b=2') // Promise -> {"alpha":"1","beta":2}
+```
+
 See the [create-parser](examples/create-parser.js) example.
 
 #### createCommand
 
 The `createCommand` function is meant to be used to create a nested tree of
-message handlers that each have a name, description and usage information.
+message handlers that each have a name, description and usage information,
+with an automatically-created `help` command and a fallback message handler.
 
 Like with the `createMatcher` `match` option, the `name` will be used to match
 the message, with the remainder of the message being passed into the specified
 message handler. The `name`, `description` and `usage` options will be used to
-display contextual help and usage information, via an automatically-created
-top-level 'help' command and a fallback message handler.
+display contextual help and usage information.
 
-Note that the response from message handlers created with `createCommand` may
-return arrays, and should be normalized into a newline-joined string with the
-included [normalizeMessage] helper function.
+Note that because the response from message handlers created with
+`createCommand` may return arrays, they should be normalized into a
+newline-joined string with the included [normalizeMessage] helper function.
 
 ```js
 const createCommand = require('chatter').createCommand;
@@ -547,6 +563,146 @@ processMessage(secondStatefulHandler, 'increment') // Promise -> The counter is 
 
 See the [create-args-adjuster](examples/create-args-adjuster.js) and
 [bot-stateful](examples/bot-stateful.js) examples.
+
+### Creating a more robust bot
+
+As with message handlers, bot behaviors can get a little complex. As shown in
+the preceding [createConversation] and [createArgsAdjuster] examples, message
+handlers may have state. Additionally, the previous bot examples don't handle
+errors in a useful way or do anything to normalize responses, which means your
+message handlers may need extra code to help format multi-line responses.
+
+To that end, this pseudocode example bot is implemented using `createBot`:
+
+[createConversation]: #createconversation
+[createArgsAdjuster]: #createargsadjuster
+
+```js
+// Import the chat service's library.
+const ChatService = require('chat-service');
+
+// Import the chatter createBot function.
+const createBot = require('chatter').createBot;
+
+// Create a chat service instance with the relevant options.
+const myChatService = new ChatService(options);
+
+// Create the chatter bot.
+const myBot = createBot({
+  // Return message handler for this message. See the "createArgsAdjuster"
+  // example for the definition of getStatefulMessageHandler.
+  createMessageHandler(id) {
+    const messageHandler = getStatefulMessageHandler();
+    // Let the bot know that the message handler has state, so it'll be cached.
+    messageHandler.hasState = true;
+    return messageHandler;
+  },
+  // Get a cache id from the "message" object passed into onMessage. In this
+  // example, each user gets their own stateful message handler, with its own
+  // unique counter.
+  getMessageHandlerCacheId(message) {
+    return message.user;
+  },
+  // If a message handler responded to a message, send the normalized text
+  // response back to the user.
+  sendResponse(message, text) {
+    myChatService.getUser(message.user).send(text);
+  },
+});
+
+// Whenever a chat service message is received, pass its user and text values
+// into the chatter bot.
+myChatService.on('message', message => {
+  const user = message.userName;
+  const text = message.messageText;
+  return myBot.onMessage({user, text});
+});
+
+// Actually connect to the chat service.
+myChatService.connect();
+
+// Simulated chat log:
+// <cowboy> test
+//          (nothing happens)
+// <cowboy> help
+// <bot>    An exciting command, for sure.
+//          *Commands:*
+//          > *increment* - Increment the counter and show it.
+// <cowboy> increment
+// <bot>    The counter is now at 1.
+// <cowboy> increment
+// <bot>    The counter is now at 2.
+// <tyler>  increment
+// <bot>    The counter is now at 1.
+// <cowboy> increment
+// <bot>    The counter is now at 3.
+// <tyler>  increment
+// <bot>    The counter is now at 2.
+```
+
+See the [bot-stateful](examples/bot-stateful.js) and
+[bot-conversation](examples/bot-conversation.js) examples.
+
+### Creating a Slack bot
+
+While the aforementioned [Bot](#creating-a-more-robust-bot) is generally useful,
+it's really meant to be a starting point from which other more specific bots may
+be derived. Which brings us to SlackBot.
+
+SlackBot contains all of the functionality of Bot, with some useful additional
+features like passing channel, user and slack information into message handlers,
+alowing message handlers to be chosen dynamically based on channel, group or dm,
+and automatically connecting the bot to the slack rtm & web clients.
+
+When you create a SlackBot, you pass in an instance of the Slack `RtmClient` and
+`WebClient`, and the connections between the bot and service are handled for you
+automatically. All you have to do is specify your message handlers (which can be
+done programmatically, as in the example below) and tell the bot to login:
+
+```js
+// Import the official Slack client.
+const slack = require('@slack/client');
+const RtmClient = slack.RtmClient;
+const WebClient = slack.WebClient;
+const MemoryDataStore = slack.MemoryDataStore;
+
+// Import the chatter createBot function.
+const createSlackBot = require('chatter').createSlackBot;
+
+const bot = createSlackBot({
+  // The bot name.
+  name: 'Chatter Bot',
+  // The getSlack function should return instances of the slack rtm and web
+  // clients, like so. See https://github.com/slackhq/node-slack-sdk
+  getSlack() {
+    return {
+      rtmClient: new RtmClient(process.env.SLACK_API_TOKEN, {
+        dataStore: new MemoryDataStore(),
+        autoReconnect: true,
+        logLevel: 'error',
+      }),
+      webClient: new WebClient(process.env.SLACK_API_TOKEN),
+    };
+  },
+  // Return message handler for this message. See the "createArgsAdjuster"
+  // example for the definition of getStatefulMessageHandler.
+  createMessageHandler(id, meta) {
+    const channel = meta.channel;
+    // In this example, the bot will only handle DMs and ignore public channels.
+    if (channel.is_im) {
+      const messageHandler = getStatefulMessageHandler();
+      // Let the bot know that the message handler has state, so it'll be cached.
+      messageHandler.hasState = true;
+      return messageHandler;
+    }
+  },
+});
+
+// Connect!
+bot.login();
+```
+
+See the [slack-bot](examples/slack-bot.js) example.
 
 ### API
 
