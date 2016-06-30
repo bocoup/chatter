@@ -105,6 +105,43 @@ describe('message-handler/matcher', function() {
         return expect(matcher.handleMessage()).to.be.fulfilled();
       });
 
+      it('should accept a match string', function() {
+        const handleMessage = (remainder, arg) => ({message: `${remainder} ${arg}`});
+        const matcher = createMatcher({match: 'foo', handleMessage});
+        return Promise.all([
+          expect(matcher.handleMessage('foo', 1)).to.become({message: ' 1'}),
+          expect(matcher.handleMessage('foo bar', 1)).to.become({message: 'bar 1'}),
+          expect(matcher.handleMessage('foo    bar', 1)).to.become({message: 'bar 1'}),
+          expect(matcher.handleMessage('foo-bar', 1)).to.become(false),
+        ]);
+      });
+
+      it('should accept a match regex', function() {
+        const handleMessage = (remainder, arg) => ({message: `${remainder} ${arg}`});
+        const matcher = createMatcher({match: /^foo(?:$|\s+(.*))/, handleMessage});
+        return Promise.all([
+          expect(matcher.handleMessage('foo', 1)).to.become({message: ' 1'}),
+          expect(matcher.handleMessage('foo bar', 1)).to.become({message: 'bar 1'}),
+          expect(matcher.handleMessage('foo    bar', 1)).to.become({message: 'bar 1'}),
+          expect(matcher.handleMessage('foo-bar', 1)).to.become(false),
+        ]);
+      });
+
+      it('should accept a match function', function() {
+        const handleMessage = (remainder, arg) => ({message: `${remainder} ${arg}`});
+        const match = message => {
+          const [fullMatch, capture = ''] = message.match(/^foo(?:$|\s+(.*))/) || [];
+          return fullMatch ? capture : false;
+        };
+        const matcher = createMatcher({match, handleMessage});
+        return Promise.all([
+          expect(matcher.handleMessage('foo', 1)).to.become({message: ' 1'}),
+          expect(matcher.handleMessage('foo bar', 1)).to.become({message: 'bar 1'}),
+          expect(matcher.handleMessage('foo    bar', 1)).to.become({message: 'bar 1'}),
+          expect(matcher.handleMessage('foo-bar', 1)).to.become(false),
+        ]);
+      });
+
       it('should only run child handlers on match / should return false on no match', function() {
         let i = 0;
         const handleMessage = () => {
@@ -117,17 +154,6 @@ describe('message-handler/matcher', function() {
           () => expect(matcher.handleMessage('baz')).to.become(false),
           () => expect(i).to.equal(1),
         ], f => f());
-      });
-
-      it('should support string matching / should trim leading space from the remainder', function() {
-        const handleMessage = (remainder, arg) => ({message: `${remainder} ${arg}`});
-        const matcher = createMatcher({match: 'foo', handleMessage});
-        return Promise.all([
-          expect(matcher.handleMessage('foo', 1)).to.become({message: ' 1'}),
-          expect(matcher.handleMessage('foo bar', 1)).to.become({message: 'bar 1'}),
-          expect(matcher.handleMessage('foo    bar', 1)).to.become({message: 'bar 1'}),
-          expect(matcher.handleMessage('foo-bar', 1)).to.become(false),
-        ]);
       });
 
       it('should support function matching / should pass message and additional arguments into match fn', function() {
