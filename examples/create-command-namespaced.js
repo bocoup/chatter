@@ -63,6 +63,7 @@ const multiplyCommand = createCommand({
 const mathCommand = createCommand({
   isParent: true,
   name: 'math',
+  alias: 'math:',
   description: 'Math-related commands.',
 }, [
   addCommand,
@@ -91,13 +92,13 @@ function simulate(messageHandler, message) {
 Promise.mapSeries([
   () => simulate(mathCommand, 'hello'),
   () => simulate(mathCommand, 'help'),
-  () => simulate(mathCommand, 'math hello'),
-  () => simulate(mathCommand, 'math help'),
+  () => simulate(mathCommand, 'math: hello'),
+  () => simulate(mathCommand, 'math: help'),
   () => simulate(mathCommand, 'math help add'),
-  () => simulate(mathCommand, 'math help add 3 4 5'),
-  () => simulate(mathCommand, 'math add 3 4 5'),
+  () => simulate(mathCommand, 'math: help add 3 4 5'),
+  () => simulate(mathCommand, 'math: add 3 4 5'),
   () => simulate(mathCommand, 'math multiply'),
   () => simulate(mathCommand, 'math multiply three four five'),
-  () => simulate(mathCommand, 'math help multiply'),
+  () => simulate(mathCommand, 'math: help multiply'),
   () => simulate(mathCommand, 'math multiply 3 4 5'),
 ], f => f());

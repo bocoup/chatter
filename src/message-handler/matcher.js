@@ -45,7 +45,7 @@ export class MatchingMessageHandler extends DelegatingMessageHandler {
     if (typeof match === 'function') {
       return match(message, ...args);
     }
-    else if (typeof match === 'string') {
+    else if (typeof match === 'string' || match instanceof RegExp) {
       return matchStringOrRegex(match, message);
     }
     throw new TypeError('Invalid "match" option format.');
