@@ -11,7 +11,7 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
 
   constructor(options = {}, children) {
     super(options, children);
-    const {name, usage, description, details, isParent} = options;
+    const {name, aliases, usage, description, details, isParent} = options;
     this.isCommand = true;
     this.name = name;
     this.usage = usage;
@@ -33,10 +33,18 @@ export class CommandMessageHandler extends DelegatingMessageHandler {
     }
     // Keep track of this command's sub-commands for later use.
     this.subCommands = this.children.filter(c => c.isCommand);
-    // If this command has a name, create a matching wrapper around children
-    // that responds only to this command's name.
-    if (name) {
-      this.children = createMatcher({match: name}, this.children);
+    // If this command has a name or aliases, create a matching wrapper around
+    // children that responds only to that name or an alias.
+    if (name || aliases) {
+      const items = !aliases ? [] : Array.isArray(aliases) ? aliases : [aliases];
+      if (name) {
+        items.unshift(name);
+      }
+      const origChildren = this.children;
+      this.children = items.map(item => createMatcher({match: item}, origChildren));
+      if (!name) {
+        this.children.push(origChildren);
+      }
     }
   }
 
