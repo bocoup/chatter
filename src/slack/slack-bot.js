@@ -206,6 +206,21 @@ export class SlackBot extends Bot {
       .then(() => Promise.delay(this.postMessageDelay));
   }
 
+  // Get the bot's name and a list of aliases suitable for use in a top-level
+  // command message handler.
+  getBotNameAndAliases() {
+    const {activeUserId, dataStore} = this.slack.rtmClient;
+    // Bot name.
+    const botName = dataStore.getUserById(activeUserId).name;
+    // Aliases for a top-level bot command.
+    const aliases = [
+      `${botName}:`,
+      `<@${activeUserId}>`,
+      `<@${activeUserId}>:`,
+    ];
+    return {botName, aliases};
+  }
+
 }
 
 export default function createSlackBot(options) {
