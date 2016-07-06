@@ -158,39 +158,35 @@ const bot = createSlackBot({
   // to handle each message.
   createMessageHandler(id, meta) {
     const channel = meta.channel;
+    // Get actual bot name and aliases for the bot. If the bot's actual name in
+    // Slack was "test", the aliases would be "test:" "@test" "@test:", allowing
+    // the bot to respond to commands prefixed with any of them. If the channel
+    // is a DM, the bot name will be null, and the actual name will be added to
+    // the aliases list, so the bot can respond to both prefixed and non-
+    // prefixed messages. Alternately, specify your own bot name and aliases!
+    const nameObj = this.getBotNameAndAliases(channel.is_im);
+    console.log(nameObj);
+    // Create the top-level command.
+    const rootCommand = createCommand({
+      isParent: true,
+      name: nameObj.name,
+      aliases: nameObj.aliases,
+      description: `Hi, I'm the test bot!`,
+    }, [
+      delayCommand,
+      echoCommand,
+      mathCommand,
+    ]);
     // Direct message.
     if (channel.is_im) {
-      // In direct messages, top-level commands don't need a name, because all
-      // messages come from the one user in the DM. You can use a name if you
-      // want, though!
-      return createCommand({
-        isParent: true,
-        description: `Hi, I'm the test bot!`,
-      }, [
-        delayCommand,
-        echoCommand,
-        mathCommand,
-      ]);
+      return rootCommand;
     }
     // Public channel message.
     return [
-      // In public channels, top-level commands should have a name, so that
-      // the command's fallback message handler doesn't trigger for every
-      // single non-command message. Practically, this just means you have to
-      // prefix all commands with the name, like "bot echo hello". You can omit
-      // the name if you really want, though!
-      createCommand({
-        name: 'bot',
-        isParent: true,
-        description: `Hi, I'm the test bot!`,
-      }, [
-        delayCommand,
-        echoCommand,
-        mathCommand,
-      ]),
+      rootCommand,
       // You can certainly combine commands and other message handlers, as long
       // as the command has a name. (If the command didn't have a name, it would
-      // handle all messages, and the following would never run).
+      // handle all messages, and message handlers after it would never run).
       helloHandler,
       lolHandler,
     ];
