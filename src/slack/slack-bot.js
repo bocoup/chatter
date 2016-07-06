@@ -207,18 +207,24 @@ export class SlackBot extends Bot {
   }
 
   // Get the bot's name and a list of aliases suitable for use in a top-level
-  // command message handler.
-  getBotNameAndAliases() {
+  // command message handler. If "isIm" is true, set "name" to null and add
+  // the bot name to the list of aliases, so the bot will both respond to the
+  // name (or any other aliases) but also to un-prefixed messages.
+  getBotNameAndAliases(isIm = false) {
     const {activeUserId, dataStore} = this.slack.rtmClient;
     // Bot name.
-    const botName = dataStore.getUserById(activeUserId).name;
+    let name = dataStore.getUserById(activeUserId).name;
     // Aliases for a top-level bot command.
     const aliases = [
-      `${botName}:`,
+      `${name}:`,
       `<@${activeUserId}>`,
       `<@${activeUserId}>:`,
     ];
-    return {botName, aliases};
+    if (isIm) {
+      aliases.unshift(name);
+      name = null;
+    }
+    return {name, aliases};
   }
 
 }
