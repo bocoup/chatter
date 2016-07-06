@@ -1,6 +1,8 @@
 # chatter
 > A collection of useful primitives for creating interactive chat bots.
 
+<img src="https://static.bocoup.com/chatter/robot.svg" width="200">
+
 [![NPM](https://nodei.co/npm/chatter.png)](https://nodei.co/npm/chatter/)
 
 [![Build Status](https://travis-ci.org/bocoup/chatter.svg?branch=master)](https://travis-ci.org/bocoup/chatter)
