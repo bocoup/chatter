@@ -13,7 +13,7 @@ export class SlackBot extends Bot {
       slack,
       getSlack,
       name = 'Chatter Bot',
-      icon = 'https://placekitten.com/48/48',
+      icon = 'https://static.bocoup.com/chatter/logo.png',
       eventNames = ['open', 'error', 'message'],
       postMessageDelay = 250,
     } = options;
