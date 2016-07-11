@@ -448,7 +448,7 @@ and must be be cached on a per-conversation basis (usually per-channel or
 per-direct message), because of the need to keep track of the current dialog.
 
 ```js
-const createConveration = require('chatter').createConveration;
+const createConversation = require('chatter').createConversation;
 
 const helloHandler = message => {
   return message.indexOf('hello') !== -1 ? 'Hello to you too!' : false;
@@ -480,7 +480,7 @@ const handleChoices = choice => {
   };
 };
 
-const conversationHandler = createConveration([
+const conversationHandler = createConversation([
   helloHandler,
   askHandler,
   chooseHandler,
