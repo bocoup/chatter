@@ -69,6 +69,13 @@ describe('message-handler/matcher', function() {
       expect(matchStringOrRegex(re, 'foo')).to.equal('');
     });
 
+    it('should escape regex special characters', function() {
+      expect(matchStringOrRegex('+[]/-^$*.?()\\|', '')).to.equal(false);
+      expect(matchStringOrRegex('\\w+', 'foo')).to.equal(false);
+      expect(matchStringOrRegex('+', '+')).to.equal('');
+      expect(matchStringOrRegex('\\w+', '\\w+')).to.equal('');
+    });
+
   });
 
   describe('createMatcher', function() {
